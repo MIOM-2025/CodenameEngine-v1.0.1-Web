@@ -84,7 +84,6 @@ class TitleState extends MusicBeatState
 	public function getIntroTextShit():Array<Array<String>>
 	{
 		var fullText:String = Assets.getText(Paths.txt('titlescreen/introText'));
-		if (fullText == null) fullText = "Codename Engine Web--Ready";
 
 		var firstArray:Array<String> = fullText.split('\n');
 		var swagGoodArray:Array<Array<String>> = [];
@@ -105,10 +104,14 @@ class TitleState extends MusicBeatState
 
 		var pressedEnter:Bool = FlxG.keys.justPressed.ENTER;
 
-		#if FLX_TOUCH
+		#if mobile
 		for (touch in FlxG.touches.list)
+		{
 			if (touch.justPressed)
+			{
 				pressedEnter = true;
+			}
+		}
 		#end
 
 		var gamepad:FlxGamepad = FlxG.gamepads.lastActive;
@@ -231,29 +234,9 @@ class TitleState extends MusicBeatState
 
 	public var titleSprites:Map<String, FlxSprite> = [];
 
-	public static function getTextSync(path:String):String {
-		var text:String = Assets.getText(path);
-		#if web
-		if (text == null) {
-			try {
-				var xhr = new js.html.XMLHttpRequest();
-				xhr.open('GET', path, false);
-				xhr.send();
-				if (xhr.status == 200 || xhr.status == 0) text = xhr.responseText;
-			} catch (e:Dynamic) {}
-		}
-		#end
-		return text;
-	}
-
 	public function loadXML() {
 		try {
-			var xmlText:String = getTextSync(Paths.xml('titlescreen/titlescreen'));
-			if (xmlText == null || xmlText.length == 0) {
-				Logs.warn('titlescreen XML missing, using defaults');
-				return;
-			}
-			xml = new Access(Xml.parse(xmlText).firstElement());
+			xml = new Access(Xml.parse(Assets.getText(Paths.xml('titlescreen/titlescreen'))).firstElement());
 			if (xml.hasNode.intro) {
 				titleLines = [];
 				if (xml.node.intro.has.length) titleLength = Std.parseInt(xml.node.intro.att.length).getDefault(16);

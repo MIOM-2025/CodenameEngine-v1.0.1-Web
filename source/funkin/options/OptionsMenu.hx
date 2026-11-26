@@ -5,15 +5,13 @@ import flixel.util.typeLimit.OneOfThree;
 import funkin.editors.ui.UIState;
 import funkin.options.categories.*;
 import funkin.options.type.*;
-import mobile.funkin.backend.system.MobileControlSelectSubState;
 
 typedef OptionCategory = {
 	var name:String;
 	var desc:String;
-	var ?state:OneOfThree<TreeMenuScreen, Class<TreeMenuScreen>, (name:String, desc:String, ?touchPadModes:Array<String>) -> TreeMenuScreen>;
+	var ?state:OneOfThree<TreeMenuScreen, Class<TreeMenuScreen>, (name:String, desc:String) -> TreeMenuScreen>;
 	var ?substate:OneOfThree<MusicBeatSubstate, Class<MusicBeatSubstate>, (name:String, desc:String) -> MusicBeatSubstate>;
 	var ?suffix:String;
-	var ?touchPadModes:Array<String>;
 }
 
 class OptionsMenu extends TreeMenu {
@@ -34,13 +32,6 @@ class OptionsMenu extends TreeMenu {
 			desc: 'optionsTree.appearance-desc',
 			state: AppearanceOptions
 		},
-		#if (mobile || TOUCH_CONTROLS)
-		{
-			name: 'optionsTree.mobile-name',
-			desc: 'optionsTree.mobile-desc',
-			state: MobileOptions
-		},
-		#end
 		#if TRANSLATIONS_SUPPORT
 		{
 			name: 'optionsTree.language-name',
@@ -90,11 +81,11 @@ class OptionsMenu extends TreeMenu {
 				if (o.state is TreeMenuScreen)
 					addMenu(o.state);
 				else if (Reflect.isFunction(o.state)) {
-					var state:(name:String, desc:String, ?touchPadModes:Array<String>) -> TreeMenuScreen = o.state;
-					addMenu(state(o.name, o.desc, o.touchPadModes));
+					var state:(name:String, desc:String) -> TreeMenuScreen = o.state;
+					addMenu(state(o.name, o.desc));
 				}
 				else { // o.state is Class<TreeMenuScreen>
-					addMenu(Type.createInstance(o.state, [o.name, o.desc, null, null, o.touchPadModes]));
+					addMenu(Type.createInstance(o.state, [o.name, o.desc]));
 				}
 			}
 		})]));
@@ -112,31 +103,8 @@ class OptionsMenu extends TreeMenu {
 				if (access != null) for (o in parseOptionsFromXML(first, access)) first.add(o);
 			}
 		}
-		
-		#if TOUCH_CONTROLS
-		addTouchPad('UP_DOWN', 'A_B_C');
-		addTouchPadCamera();
-		#end
 	}
 
-	public override function update(elapsed:Float) {
-		super.update(elapsed);
-		
-		if (MusicBeatState.getState().touchPad.buttonC.justPressed || FlxG.keys.justPressed.CONTROL && controls.touchC)
-		{
-			openSubState(new MobileControlSelectSubState());
-			persistentUpdate = false;
-			persistentDraw = true;
-			touchPad.visible = false;
-		}
-	}
-	
-	public override function closeSubState() 
-	{
-		touchPad.visible = true;
-		super.closeSubState();
-	}
-	
 	function checkDebugOption() {
 		var first = tree.first();
 		if (Options.devMode) {
@@ -175,7 +143,6 @@ class OptionsMenu extends TreeMenu {
 	override function exit() {
 		Options.save();
 		Options.applySettings();
-		FlxG.mouse.visible = false;
 		super.exit();
 	}
 
@@ -247,15 +214,6 @@ class OptionsMenu extends TreeMenu {
 						for (o in parseOptionsFromXML(screen, node)) screen.add(o);
 						addMenu(screen);
 					}));
-				case "touchPad":
-					#if TOUCH_CONTROLS
-					var arr = [
-						node.getAtt("dpadMode") == null ? MusicBeatState.getState().touchPad.curDPadMode : node.getAtt("dpadMode"), 
-						node.getAtt("actionMode") == null ? MusicBeatState.getState().touchPad.curActionMode : node.getAtt("actionMode")
-					];
-					// MTODO: IMPLEMENT
-					//vpadMap.set(node.getAtt("menuName"), arr);
-					#end
 			}
 		}
 

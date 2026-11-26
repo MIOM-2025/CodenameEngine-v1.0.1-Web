@@ -23,17 +23,11 @@ class MemoryCounter extends Sprite {
 			label.y = 0;
 			label.text = "MEM";
 			label.multiline = label.wordWrap = false;
-			label.defaultTextFormat = new TextFormat(openfl.utils.Assets.getFont("assets/fonts/DTM-Mono.ttf").fontName, 12, -1);
+			label.defaultTextFormat = new TextFormat(Framerate.fontName, 12, -1);
 			label.selectable = false;
 			addChild(label);
 		}
 		memoryPeakText.alpha = 0.5;
-
-		this.memoryText.antiAliasType = ADVANCED;
-        this.memoryText.sharpness = 400/*MAX ON OPENFL*/;
-
-		this.memoryPeakText.antiAliasType = ADVANCED;
-        this.memoryPeakText.sharpness = 400/*MAX ON OPENFL*/;
 	}
 
 	public function reload() {}

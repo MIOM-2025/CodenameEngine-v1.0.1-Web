@@ -11,16 +11,6 @@ import funkin.backend.system.Controls;
 import funkin.backend.system.interfaces.IBeatReceiver;
 import funkin.backend.system.interfaces.IBeatCancellableReceiver;
 import funkin.options.PlayerSettings;
-import flixel.FlxSubState;
-#if TOUCH_CONTROLS
-import mobile.funkin.backend.utils.MobileData;
-import mobile.objects.Hitbox;
-import mobile.objects.TouchPad;
-import mobile.objects.MobileControls;
-import mobile.objects.IMobileControls;
-import flixel.FlxCamera;
-import flixel.util.FlxDestroyUtil;
-#end
 
 /**
  * Base class for all the sub states.
@@ -28,7 +18,6 @@ import flixel.util.FlxDestroyUtil;
 **/
 class MusicBeatSubstate extends FlxSubState implements IBeatCancellableReceiver
 {
-	public static var instance:MusicBeatSubstate;
 	private var lastBeat:Float = 0;
 	private var lastStep:Float = 0;
 
@@ -116,95 +105,8 @@ class MusicBeatSubstate extends FlxSubState implements IBeatCancellableReceiver
 	inline function get_controlsP2():Controls
 		return PlayerSettings.player2.controls;
 
-	#if TOUCH_CONTROLS
-	public var touchPad:TouchPad;
-	public var mobileControls:IMobileControls;
-	public var mobileControlsCam:FlxCamera;
-	public var tpadCam:FlxCamera;
-	#end
-
-	public function addTouchPad(DPad:String, Action:String)
-	{
-		#if TOUCH_CONTROLS
-		touchPad = new TouchPad(DPad, Action);
-		add(touchPad);
-		#end
-	}
-
-	public function removeTouchPad()
-	{
-		#if TOUCH_CONTROLS
-		if (touchPad != null)
-		{
-			remove(touchPad);
-			touchPad = FlxDestroyUtil.destroy(touchPad);
-		}
-
-		if(tpadCam != null)
-		{
-			FlxG.cameras.remove(tpadCam);
-			tpadCam = FlxDestroyUtil.destroy(tpadCam);
-		}
-		#end
-	}
-
-	public function addMobileControls(defaultDrawTarget:Bool = false):Void
-	{
-		#if TOUCH_CONTROLS
-		switch (MobileData.mode)
-		{
-			case 0: // RIGHT_FULL
-				mobileControls = new TouchPad('RIGHT_FULL', 'NONE');
-			case 1: // LEFT_FULL
-				mobileControls = new TouchPad('LEFT_FULL', 'NONE');
-			case 2: // CUSTOM
-				mobileControls = MobileData.getTouchPadCustom(new TouchPad('RIGHT_FULL', 'NONE'));
-			case 3: // HITBOX
-				mobileControls = new Hitbox();
-		}
-
-		mobileControlsCam = new FlxCamera();
-		mobileControlsCam.bgColor.alpha = 0;
-		FlxG.cameras.add(mobileControlsCam, defaultDrawTarget);
-
-		mobileControls.instance.cameras = [mobileControlsCam];
-		mobileControls.instance.visible = false;
-		add(mobileControls.instance);
-		#end
-	}
-
-	public function removeMobileControls()
-	{
-		#if TOUCH_CONTROLS
-		if (mobileControls != null)
-		{
-			remove(mobileControls.instance);
-			mobileControls.instance = FlxDestroyUtil.destroy(mobileControls.instance);
-			mobileControls = null;
-		}
-
-		if (mobileControlsCam != null)
-		{
-			FlxG.cameras.remove(mobileControlsCam);
-			mobileControlsCam = FlxDestroyUtil.destroy(mobileControlsCam);
-		}
-		#end
-	}
-
-	public function addTouchPadCamera(?defaultDrawTarget:Bool = false) {
-		#if TOUCH_CONTROLS
-		if (touchPad != null)
-		{
-			tpadCam = new FlxCamera();
-			tpadCam.bgColor.alpha = 0;
-			FlxG.cameras.add(tpadCam, defaultDrawTarget);
-			touchPad.cameras = [tpadCam];
-		}
-		#end
-	}
 
 	public function new(scriptsAllowed:Bool = true, ?scriptName:String) {
-		instance = this;
 		super();
 		this.scriptsAllowed = #if SOFTCODED_STATES scriptsAllowed #else false #end;
 		this.scriptName = scriptName;
@@ -224,15 +126,6 @@ class MusicBeatSubstate extends FlxSubState implements IBeatCancellableReceiver
 					script.remappedNames.set(script.fileName, '$i:${script.fileName}');
 					stateScripts.add(script);
 					script.load();
-					stateScripts.set('setTouchPadMode', function(DPadMode:String, ActionMode:String, ?addCamera = false){
-						#if TOUCH_CONTROLS
-						if(touchPad == null) return;
-						removeTouchPad();
-						addTouchPad(DPadMode, ActionMode);
-						if(addCamera)
-							addTouchPadCamera();
-						#end
-					});
 				}
 			}
 			#if EXPERMENTAL_SCRIPT_RELOADING
@@ -296,9 +189,6 @@ class MusicBeatSubstate extends FlxSubState implements IBeatCancellableReceiver
 		return event;
 	}
 
-	public static function getState():MusicBeatSubstate
-		return cast (FlxG.state, MusicBeatSubstate);
-
 	override function update(elapsed:Float)
 	{
 		call("update", [elapsed]);
@@ -346,22 +236,12 @@ class MusicBeatSubstate extends FlxSubState implements IBeatCancellableReceiver
 			super.openSubState(e.substate is FlxSubState ? cast e.substate : subState);
 	}
 
-	public override function closeSubState() {
-		var e = event("onCloseSubState", EventManager.get(StateEvent).recycle(subState));
-		if (!e.cancelled)
-			super.closeSubState();
-	}
-
 	public override function onResize(w:Int, h:Int) {
 		super.onResize(w, h);
 		event("onResize", EventManager.get(ResizeEvent).recycle(w, h, null, null));
 	}
 
 	public override function destroy() {
-		#if TOUCH_CONTROLS
-		removeTouchPad();
-		removeMobileControls();
-		#end
 		super.destroy();
 		call("destroy");
 		stateScripts = FlxDestroyUtil.destroy(stateScripts);
