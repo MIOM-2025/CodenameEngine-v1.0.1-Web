@@ -1,0 +1,164 @@
+name: HTML5 Build
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/html5.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Init submodules
+        run: git submodule update --init --recursive
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v2
+        with:
+          haxe-version: 4.3.7
+
+      - name: Install system deps for lime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq python3-fonttools \
+            libsdl2-2.0-0 libopenal1 libvorbis0a libvorbisfile3 \
+            libgl1 libegl1 libx11-6 libxext6 libxrandr2 libxi6 libxcursor1 \
+            libxinerama1 libxxf86vm1
+
+      - name: Add missing config files
+        run: |
+          mkdir -p assets/data/config
+          BASE=https://raw.githubusercontent.com/CodenameCrew/CodenameEngine/main/assets/data/config
+          for f in menuItems.txt freeplaySonglist.txt discord.json; do
+            curl -sL "$BASE/$f" -o "assets/data/config/$f" || true
+          done
+          ls -la assets/data/config/ || true
+          du -sh assets || true
+
+      - name: Add music and sounds
+        run: |
+          mkdir -p assets/music assets/sounds
+          BASE=https://raw.githubusercontent.com/CodenameCrew/CodenameEngine/main/assets
+          for f in DISTORTO breakfast freakyMenu gameOver; do
+            [ -f "assets/music/$f.mp3" ] || curl -sL "$BASE/music/$f.mp3" -o "assets/music/$f.mp3" || true
+          done
+          for f in $(curl -s "https://api.github.com/repos/CodenameCrew/CodenameEngine/contents/assets/sounds" | grep -o '"name": *"[^"]*\.mp3"' | cut -d'"' -f4); do
+            [ -f "assets/sounds/$f" ] || curl -sL "$BASE/sounds/$f" -o "assets/sounds/$f" || true
+          done
+          du -sh assets/music assets/sounds assets || true
+
+      - name: Install libraries
+        run: haxe -cp commandline -D analyzer-optimize --run Main setup -s
+
+      - name: Fix lime ndll
+        run: |
+          haxelib install lime 8.1.2 --always --quiet || true
+          echo "--- lime dirs ---"
+          ls .haxelib/lime/ || true
+          REL=$(ls -d .haxelib/lime/*/ 2>/dev/null | grep -v '/git/' | head -1)
+          echo "release lime: $REL"
+          if [ -n "$REL" ] && [ -d "$REL/ndll" ]; then
+            mkdir -p .haxelib/lime/git/ndll
+            cp -rn "$REL/ndll/." .haxelib/lime/git/ndll/ || true
+          fi
+          haxelib set lime git
+          ls .haxelib/lime/git/ndll/Linux64/ 2>/dev/null || true
+
+      - name: Patch flixel null render context
+        run: |
+          python3 - <<'PYEOF'
+          import glob
+          paths = glob.glob('.haxelib/flixel/git/flixel/FlxG.hx')
+          assert paths, 'FlxG.hx not found'
+          p = paths[0]
+          s = open(p, encoding='utf-8').read()
+          old = "\t\trenderMethod = switch (stage.window.context.type)\n\t\t{\n\t\t\tcase OPENGL, OPENGLES, WEBGL: DRAW_TILES;\n\t\t\tdefault: BLITTING;\n\t\t}"
+          new = "\t\tvar __ctx = stage.window.context;\n\t\tif (__ctx != null)\n\t\t{\n\t\t\trenderMethod = switch (__ctx.type)\n\t\t\t{\n\t\t\t\tcase OPENGL, OPENGLES, WEBGL: DRAW_TILES;\n\t\t\t\tdefault: BLITTING;\n\t\t\t}\n\t\t}"
+          assert old in s, 'pattern not found'
+          open(p, 'w', encoding='utf-8').write(s.replace(old, new, 1))
+          print('FLXG_PATCHED')
+          PYEOF
+
+      - name: Patch lime web context creation
+        run: |
+          F=.haxelib/lime/git/src/lime/_internal/backend/html5/HTML5Window.hx
+          echo '--- source 325-365 ---'
+          sed -n '325,365p' "$F"
+          python3 - <<'PYEOF'
+          p = '.haxelib/lime/git/src/lime/_internal/backend/html5/HTML5Window.hx'
+          s = open(p, encoding='utf-8').read()
+          old = "webgl = cast canvas.getContext(name, options);"
+          new = ("webgl = cast canvas.getContext(name, options);\n"
+                 "\t\t\t\tif (webgl == null) webgl = cast canvas.getContext(name);\n"
+                 "\t\t\t\tif (webgl == null) webgl = cast canvas.getContext(name, { alpha: true, depth: false, stencil: true, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false });")
+          if old in s:
+              s = s.replace(old, new, 1)
+              open(p, 'w', encoding='utf-8').write(s)
+              print('WINDOW_PATCHED')
+          else:
+              print('NO_MATCH')
+          PYEOF
+
+      - name: Patch flixel null frame in draw
+        run: |
+          python3 - <<'PYEOF'
+          import glob
+          paths = glob.glob('.haxelib/flixel/git/flixel/FlxSprite.hx')
+          assert paths, 'FlxSprite.hx not found'
+          p = paths[0]
+          s = open(p, encoding='utf-8').read()
+          n = s.count("if (isFrameNull)")
+          s = s.replace("if (isFrameNull)", "if (isFrameNull || _frame == null)")
+          s = s.replace("if (alpha == 0 || _frame.type == FlxFrameType.EMPTY)",
+                        "if (alpha == 0 || _frame == null || _frame.type == FlxFrameType.EMPTY)")
+          open(p, 'w', encoding='utf-8').write(s)
+          print('FLXSPRITE_PATCHED ' + str(n))
+          PYEOF
+
+      - name: Patch lime html5 backend
+        run: |
+          F=$(find .haxelib/lime -path '*backend/html5/HTML5Application.hx' | grep '/git/' | head -1)
+          echo "patching $F"
+          if [ -n "$F" ]; then
+            python3 -c "import sys;p=sys.argv[1];s=open(p).read();s2=s.replace('parent.onUpdate.dispatch(deltaTime);','parent.onUpdate.dispatch(Std.int(deltaTime));');open(p,'w').write(s2);print('PATCHED' if s!=s2 else 'NO_MATCH')" "$F"
+            grep -n "dispatch(Std.int" "$F" || true
+          fi
+
+      - name: Build HTML5
+        run: haxelib run lime build html5
+
+      - name: Show output
+        if: always()
+        run: |
+          find export -maxdepth 4 -type d 2>/dev/null | head -40
+          du -sh export/release/html5/bin 2>/dev/null || true
+          du -sh mods/dustin/assets 2>/dev/null || true
+
+      - name: Deploy to gh-pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: export/release/html5/bin
+          publish_branch: gh-pages
+          force_orphan: true
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dustin-html5
+          path: export/release/html5/bin/
+          if-no-files-found: warn
