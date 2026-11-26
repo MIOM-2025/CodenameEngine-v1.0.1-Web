@@ -10,6 +10,9 @@ class CodenameBuildField extends TextField {
 		autoSize = LEFT;
 		multiline = wordWrap = false;
 		reload();
+
+		this.antiAliasType = ADVANCED;
+        this.sharpness = 400/*MAX ON OPENFL*/;
 	}
 
 	public function reload() {

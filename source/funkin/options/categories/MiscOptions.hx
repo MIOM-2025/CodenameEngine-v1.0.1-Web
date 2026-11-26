@@ -1,10 +1,11 @@
 package funkin.options.categories;
 
 import funkin.savedata.FunkinSave;
+import funkin.backend.assets.ModsFolder;
 
 class MiscOptions extends TreeMenuScreen {
 	public function new() {
-		super('optionsTree.miscellaneous-name', 'optionsTree.miscellaneous-desc', 'MiscOptions.');
+		super('optionsTree.miscellaneous-name', 'optionsTree.miscellaneous-desc', 'MiscOptions.', ['UP_DOWN', 'A_B']);
 
 		add(new Checkbox(getNameID('devMode'), getDescID('devMode'), 'devMode'));
 		add(new Checkbox(getNameID('allowConfigWarning'), getDescID('allowConfigWarning'), 'allowConfigWarning'));
@@ -25,6 +26,11 @@ class MiscOptions extends TreeMenuScreen {
 			FunkinSave.save.erase();
 			FunkinSave.highscores.clear();
 			FunkinSave.flush();
+
+			FlxG.save.erase();
+			FlxG.save.flush();
+
+			ModsFolder.switchMod(ModsFolder.currentModFolder);
 		}));
 	}
 }

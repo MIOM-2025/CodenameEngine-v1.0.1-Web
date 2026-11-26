@@ -22,6 +22,7 @@ class Options
 	 */
 	public static var naughtyness:Bool = true;
 	public static var downscroll:Bool = false;
+	public static var middleScroll:Bool = false;
 	public static var ghostTapping:Bool = true;
 	public static var flashingMenu:Bool = true;
 	public static var camZoomOnBeat:Bool = true;
@@ -40,8 +41,8 @@ class Options
 	public static var splashesEnabled:Bool = true;
 	public static var hitWindow:Float = 250;
 	public static var songOffset:Float = 0;
-	public static var framerate:Int = 120;
-	public static var gpuOnlyBitmaps:Bool = #if (mac || web) false #else true #end; // causes issues on mac and web
+	public static var framerate:Int = #if mobile 60 #else 120 #end;
+	public static var gpuOnlyBitmaps:Bool = #if (mac || web) false #else true #end; // causes issues on mac and web.
 	public static var language = "en"; // default to english, Flags.DEFAULT_LANGUAGE should not modify this
 	public static var streamedMusic:Bool = true;
 	public static var streamedVocals:Bool = false;
@@ -54,9 +55,23 @@ class Options
 	public static var lastLoadedMod:String = null;
 
 	/**
+	 * MOBILE SETTINGS
+	 */
+	#if mobile
+	public static var screenTimeOut:Bool = false;
+	#if android public static var storageType:String = "EXTERNAL_DATA"; #end
+	#end
+	public static var extraHints:String = "NONE";
+	public static var hitboxPos:Bool = true;
+	public static var hitboxType:String = 'gradient';
+	public static var hitboxAlpha:Int = FlxG.onMobile ? 60 : 0;
+	public static var oldPadTexture:Bool = false;
+	public static var touchPadAlpha:Int = FlxG.onMobile ? 60 : 0;
+	
+	/**
 	 * EDITORS SETTINGS
 	 */
-	public static var intensiveBlur:Bool = true;
+	public static var intensiveBlur:Bool = #if mobile false #else true #end;
 	public static var editorSFX:Bool = true;
 
 	public static var editorCharterPrettyPrint:Bool = false;

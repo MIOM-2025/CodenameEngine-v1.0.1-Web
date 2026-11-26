@@ -21,10 +21,16 @@ class FramerateCounter extends Sprite {
 			label.y = 0;
 			label.text = "FPS";
 			label.multiline = label.wordWrap = false;
-			label.defaultTextFormat = new TextFormat(Framerate.fontName, label == fpsNum ? 18 : 12, -1);
+			label.defaultTextFormat = new TextFormat(openfl.utils.Assets.getFont("assets/fonts/DTM-Mono.ttf").fontName, label == fpsNum ? 18 : 12, -1);
 			label.selectable = false;
 			addChild(label);
 		}
+
+		this.fpsNum.antiAliasType = ADVANCED;
+        this.fpsNum.sharpness = 400/*MAX ON OPENFL*/;
+
+		this.fpsLabel.antiAliasType = ADVANCED;
+        this.fpsLabel.sharpness = 400/*MAX ON OPENFL*/;
 	}
 
 	public function reload() {}

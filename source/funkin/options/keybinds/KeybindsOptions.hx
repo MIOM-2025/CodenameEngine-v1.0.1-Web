@@ -209,6 +209,11 @@ class KeybindsOptions extends MusicBeatSubstate {
 		add(alphabets);
 		add(camFollow);
 
+		addTouchPad('LEFT_FULL', 'B');
+		addTouchPadCamera();
+		#if TOUCH_CONTROLS 
+		touchPad.buttonB.y = 2;
+		#end
 		FlxG.sound.volumeUpKeys = [];
 		FlxG.sound.volumeDownKeys = [];
 		FlxG.sound.muteKeys = [];
@@ -254,7 +259,7 @@ class KeybindsOptions extends MusicBeatSubstate {
 				return;
 			}
 
-			if (controls.ACCEPT && !skipThisFrame) {
+			if (FlxG.keys.justPressed.ENTER && !skipThisFrame) {
 				if (alphabets.members[curSelected] != null) {
 					canSelect = false;
 					CoolUtil.playMenuSFX(CONFIRM);

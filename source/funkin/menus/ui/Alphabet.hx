@@ -36,7 +36,7 @@ final class AlphabetComponent {
 	public var cos:Float;
 	public var scaleX:Float;
 	public var scaleY:Float;
-
+	
 	public var flipX:Bool;
 	public var flipY:Bool;
 
@@ -163,7 +163,7 @@ class Alphabet extends FlxSprite {
 	};
 	var manualLetters:Array<String> = [];
 	var failedLetters:Array<String> = [];
-	var failedOutlines:Array<String> = [];
+	var sheets:Array<String> = [];
 
 	public var renderMode:AlphabetRenderMode = DEFAULT;
 
@@ -321,7 +321,7 @@ class Alphabet extends FlxSprite {
 				if (!isOnScreen(camera)) {
 					frameOffset.y -= offsetY;
 					frameOffset.x -= offsetX;
-					break;
+					continue;
 				}
 
 				if (__component.hasColorMode)
@@ -436,10 +436,8 @@ class Alphabet extends FlxSprite {
 		if (anim == null)
 			return defaultAdvance;
 
-		if (data.advanceEmpty && !data.isDefault) {
-			data.advanceEmpty = false;
+		if (data.advanceEmpty && !data.isDefault)
 			data.advance = frames.frames[anim.frames[0]].sourceSize.x;
-		}
 		return (data.isDefault) ? frames.frames[anim.frames[0]].sourceSize.x : data.advance;
 	}
 
@@ -477,7 +475,7 @@ class Alphabet extends FlxSprite {
 		return data;
 	}
 
-	final function defaultsIndexOf(data:AlphabetLetterData):Int {
+	public function defaultsIndexOf(data:AlphabetLetterData):Int {
 		//while(i < defaults.length) {
 		for(i in 0...3) {
 			if(defaults[i] == data)
@@ -486,14 +484,23 @@ class Alphabet extends FlxSprite {
 		return -1;
 	}
 
+	private static var __letterTraceCount:Int = 0;
+
 	function fastGetLetterAnim(char:String, data:AlphabetLetterData, component:AlphabetComponent, index:Int):FlxAnimation {
 		var name = char + Std.string(index);
 
 		var anim = (data.isDefault) ?
 			component.anim.replace("LOWERLETTER", char.toLowerCase()).replace("UPPERLETTER", char.toUpperCase()).replace("LETTER", char) :
 			component.anim;
+		if (__letterTraceCount < 12) {
+			__letterTraceCount++;
+			trace('CNE_LETTER char=' + char + ' force=' + forceCase + ' isDefault=' + data.isDefault + ' anim=' + anim + ' fps=' + fps);
+		}
 		animation.addByPrefix(name, anim, fps);
-		return animation.exists(name) ? animation.getByName(name) : null;
+		var __ok = animation.exists(name);
+		if (__ok) return animation.getByName(name);
+		if (__letterTraceCount < 12) trace('CNE_LETTER_MISS ' + anim);
+		return null;
 	}
 
 	function getLetterAnim(char:String, data:AlphabetLetterData, component:AlphabetComponent, index:Int):FlxAnimation {
@@ -514,33 +521,34 @@ class Alphabet extends FlxSprite {
 		return animation.getByName(name);
 	}
 
-	/*function getLetterOutline(char:String, component:AlphabetComponent, index:Int) {
-		var name = char + "Outline" + Std.string(index);
-		if (failedOutlines.contains(name)) return null;
-		if (animation.exists(name)) return animation.getByName(name);
-
-		animation.addByPrefix(name, component.outline.anim, fps);
-		if (!animation.exists(name)) {
-			failedOutlines.push(name);
-			return null;
-		}
-		return animation.getByName(name);
-	}*/
-
 	function checkNode(node:Xml):Void {
 		switch (node.nodeName) {
 			case "spritesheet":
-				if (frames == null)
-					var __ch = node.firstChild();
-					var __sheet = __ch == null ? "" : (__ch.nodeValue == null ? "" : __ch.nodeValue).trim();
-					if (__sheet != "") frames = Paths.getFrames(__sheet);
-				else {
-					for (frame in Paths.getFrames(node.firstChild().nodeValue).frames)
-						frames.pushFrame(frame);
+				// On web the parser may hand back no child node, which used to yield an
+				// empty sheet name and silently kill every letter animation.
+				var __child = node.firstChild();
+				var sheet = __child == null ? "" : (__child.nodeValue == null ? "" : __child.nodeValue).trim();
+				if (sheet == "") {
+					for (__n in node) {
+						if (__n.nodeType == Xml.PCData || __n.nodeType == Xml.CData) sheet = (__n.nodeValue == null ? "" : __n.nodeValue).trim();
+						if (sheet != "") break;
+					}
+				}
+				trace('CNE_SHEET "' + sheet + '" child=' + (__child == null ? 'null' : Std.string(__child.nodeType)));
+				if (sheet != "") {
+					if (frames == null)
+						frames = Paths.getFrames(sheet);
+					else {
+						var __f = Paths.getFrames(sheet);
+						if (__f != null) for (frame in __f.frames)
+							frames.pushFrame(frame);
+					}
+					sheets.push(sheet);
 				}
 			case "defaultAnim":
+				// No casing attribute means this is the generic default (CaseMode.NONE).
+				// Beware: an empty string also maps to NONE, which is what desktop parsing yields.
 				var __casing = node.get("casing");
-				// missing casing => generic default (CaseMode.NONE); an empty string maps there too
 				var idx = ["UPPER", "LOWER"].indexOf(__casing == null ? "" : __casing.toUpperCase()) + 1;
 
 				var angle:Float = Std.parseFloat(node.get("angle")).getDefaultFloat(0.0);
@@ -553,7 +561,7 @@ class Alphabet extends FlxSprite {
 					advance: 0.0,
 					advanceEmpty: true,
 					components: [{
-						anim: node.firstChild().nodeValue,
+						anim: node.firstChild().nodeValue.trim(),
 
 						x: 0.0,
 						y: 0.0,
@@ -564,7 +572,7 @@ class Alphabet extends FlxSprite {
 						angle: angle,
 						cos: angleCos,
 						sin: angleSin,
-
+						
 						flipX: node.get("flipX") == "true",
 						flipY: node.get("flipY") == "true",
 
@@ -620,7 +628,7 @@ class Alphabet extends FlxSprite {
 							angle: angle,
 							cos: angleCos,
 							sin: angleSin,
-
+							
 							flipX: xFlip,
 							flipY: yFlip,
 
@@ -643,7 +651,7 @@ class Alphabet extends FlxSprite {
 						angle: angle,
 						cos: angleCos,
 						sin: angleSin,
-
+						
 						flipX: xFlip,
 						flipY: yFlip,
 
@@ -677,7 +685,7 @@ class Alphabet extends FlxSprite {
 				var xScale:Float = Std.parseFloat(node.get("scaleX")).getDefaultFloat(1.0);
 				var yScale:Float = Std.parseFloat(node.get("scaleY")).getDefaultFloat(1.0);
 				var advance:Float = Std.parseFloat(node.get("advance"));
-
+				
 				var xFlip = node.get("flipX") == "true";
 				var yFlip = node.get("flipY") == "true";
 
@@ -698,7 +706,7 @@ class Alphabet extends FlxSprite {
 						angle: angle,
 						cos: angleCos,
 						sin: angleSin,
-
+						
 						flipX: xFlip,
 						flipY: yFlip,
 
@@ -709,7 +717,7 @@ class Alphabet extends FlxSprite {
 
 				components.push({
 					outIndex: (node.get("hasOutline") == "true") ? 0 : null,
-					anim: node.firstChild().nodeValue,
+					anim: node.firstChild().nodeValue.trim(),
 
 					x: xOff,
 					y: yOff,
@@ -770,6 +778,8 @@ class Alphabet extends FlxSprite {
 			v[2] = [];
 			v;
 		}
+		sheets = [];
+		manualLetters = [];
 		failedLetters = [" "];
 
 		defaultAdvance = Std.parseFloat(xml.get("advance")).getDefaultFloat(40.0);
@@ -785,34 +795,102 @@ class Alphabet extends FlxSprite {
 			checkNode(node);
 	}
 
-	private static var alphabetProperties:Array<String> = ["fps", "advance", "lineGap", "forceCasing", "useColorOffsets", "antialiasing"];
-	private static var componentProperties:Array<String> = ["name", "anim", "x", "y", "scaleX", "scaleY", "angle", "offsetX", "offsetY", "flipX", "flipY"];
+	private static var alphabetProperties:Array<String> = ["fps", "advance", "lineGap", "forceCasing", "colorMode", "antialiasing"];
+	private static var componentProperties:Array<String> = ["char", "advance", "anim", "x", "y", "scaleX", "scaleY", "flipX", "flipY", "angle", "colorMode", "hasOutline", "outline", "outlineX", "outlineY"];
 
 	public function buildXML():Xml {
-		var xml = Xml.createElement("alphabet");
+		var xml = Xml.createElement("alphabetFont");
 		xml.set("fps", Std.string(fps));
 		xml.set("advance", Std.string(defaultAdvance));
 		xml.set("lineGap", Std.string(lineGap));
 		xml.set("forceCasing", ["none", "upper", "lower"][forceCase]);
-		xml.set("useColorOffsets", ["tint", "offsets", "none"][colorMode]);
+		xml.set("colorMode", ["tint", "offsets", "none"][colorMode]);
 		xml.set("antialiasing", antialiasing ? "true" : "false");
 
 		xml.attributeOrder = alphabetProperties;
 
-		/*for (component in components) {
-			var componentXml = Xml.createElement("component");
-			componentXml.attributeOrder = componentProperties;
-			componentXml.set("name", component.name);
-			componentXml.set("anim", component.anim);
-			componentXml.set("x", Std.string(component.x));
-			componentXml.set("y", Std.string(component.y));
-			if(component.scaleX != 1) componentXml.set("scaleX", Std.string(component.scaleX));
-			if(component.scaleY != 1) componentXml.set("scaleY", Std.string(component.scaleY));
-			if(component.angle != 0) componentXml.set("angle", Std.string(component.angle));
-			if(component.offsetX != 0) componentXml.set("offsetX", Std.string(component.offsetX));
-			if(component.offsetY != 0) componentXml.set("offsetY", Std.string(component.offsetY));
-			xml.addChild(componentXml);
-		}*/
+		for (sheet in sheets) {
+			var sheetNode = Xml.createElement("spritesheet");
+			sheetNode.addChild(Xml.createPCData(sheet));
+			xml.addChild(sheetNode);
+		}
+
+		for (i in 0...3) {
+			if (defaults[i] == null) continue;
+
+			var compon = defaults[i].components[0];
+			var node = Xml.createElement("defaultAnim");
+			node.addChild(Xml.createPCData(compon.anim));
+			if (i != 0)
+				node.set("casing", ["upper", "lower"][i - 1]);
+
+			if (compon.scaleX != 1.0 || compon.scaleY != 1.0) {
+				node.set("scaleX", Std.string(compon.scaleX));
+				node.set("scaleY", Std.string(compon.scaleY));
+			}
+			if (compon.flipX || compon.flipY) {
+				node.set("flipX", Std.string(compon.flipX));
+				node.set("flipY", Std.string(compon.flipY));
+			}
+			if (compon.angle != 0.0)
+				node.set("angle", Std.string(compon.angle));
+
+			node.attributeOrder = componentProperties;
+			xml.addChild(node);
+		}
+
+		for (let in manualLetters) {
+			var data = fastGetData(let);
+			var node = Xml.createElement(data.components.length - data.startIndex > 1 ? "composite" : "anim");
+			node.set("char", let);
+			if (!data.advanceEmpty)
+				node.set("advance", Std.string(data.advance));
+
+			for (i in data.startIndex...data.components.length) {
+				var compon = data.components[i];
+				var cNode:Xml = node;
+
+				if (data.components.length - data.startIndex > 1) {
+					cNode = Xml.createElement("component");
+					cNode.set("anim", compon.anim);
+					node.addChild(cNode);
+				} else
+					cNode.addChild(Xml.createPCData(compon.anim));
+
+				if (compon.x != 0.0 || compon.y != 0.0) {
+					cNode.set("x", Std.string(-compon.x));
+					cNode.set("y", Std.string(compon.y));
+				}
+				if (compon.scaleX != 1.0 || compon.scaleY != 1.0) {
+					cNode.set("scaleX", Std.string(compon.scaleX));
+					cNode.set("scaleY", Std.string(compon.scaleY));
+				}
+				if (compon.flipX || compon.flipY) {
+					cNode.set("flipX", Std.string(compon.flipX));
+					cNode.set("flipY", Std.string(compon.flipY));
+				}
+				if (compon.angle != 0.0)
+					cNode.set("angle", Std.string(compon.angle));
+				if (compon.hasColorMode)
+					cNode.set("colorMode", ["tint", "offsets", "none"][compon.colorMode]);
+
+				if (compon.outIndex != null) {
+					var outline = data.components[compon.outIndex];
+
+					cNode.set("hasOutline", "true");
+					cNode.set("outline", outline.anim);
+					if (outline.x != 0.0 || outline.y != 0.0) {
+						cNode.set("outlineX", Std.string(outline.x));
+						cNode.set("outlineY", Std.string(outline.y));
+					}
+				}
+
+				cNode.attributeOrder = componentProperties;
+			}
+
+			node.attributeOrder = componentProperties;
+			xml.addChild(node);
+		}
 
 		return xml;
 	}
@@ -832,9 +910,9 @@ class Alphabet extends FlxSprite {
 		this.letterData = from.letterData;
 		this.defaults = from.defaults;
 		this.loaded = from.loaded;
+		this.sheets = from.sheets;
 		this.manualLetters = from.manualLetters;
 		this.failedLetters = from.failedLetters;
-		this.failedOutlines = from.failedOutlines;
 	}
 
 	override function destroy():Void {
@@ -847,7 +925,7 @@ class Alphabet extends FlxSprite {
 		defaults = null;
 		manualLetters = null;
 		failedLetters = null;
-		failedOutlines = null;
+		sheets = null;
 		super.destroy();
 	}
 

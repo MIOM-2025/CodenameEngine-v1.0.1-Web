@@ -17,8 +17,12 @@ import funkin.game.Character;
 import haxe.xml.Access;
 import haxe.xml.Printer;
 import funkin.editors.ui.UIImageExplorer.ImageSaveData;
+	#if sys
 import sys.FileSystem;
+	#end
+	#if sys
 import sys.io.File;
+	#end
 
 class CharacterEditor extends UIState {
 	static var __character:String;
@@ -518,6 +522,7 @@ class CharacterEditor extends UIState {
 				characterPropertiesWindow.editCharacterInfo(oldInfo, false);
 			case CCharEditSprite(fileID):
 				var cneisdPath:String = './.temp/__undo__${Type.getClassName(Type.getClass(FlxG.state))}__${fileID}.cneisd';
+				#if !html5
 				if (FileSystem.exists(cneisdPath)) {
 					try {
 						var cneisdData:String = File.getContent(cneisdPath);
@@ -530,6 +535,7 @@ class CharacterEditor extends UIState {
 						trace('ERROR COMPLETING UNDO: $e');
 					};
 				}
+				#end
 			case CAnimCreate(animID, animData):
 				characterAnimsWindow.deleteAnimation(characterAnimsWindow.buttons.members[animID], false);
 			case CAnimDelete(animID, animData):
@@ -589,6 +595,7 @@ class CharacterEditor extends UIState {
 				characterPropertiesWindow.editCharacterInfo(newInfo, false);
 			case CCharEditSprite(fileID):
 				var cneisdPath:String = './.temp/__redo__${Type.getClassName(Type.getClass(FlxG.state))}__${fileID}.cneisd';
+				#if !html5
 				if (FileSystem.exists(cneisdPath)) {
 					try {
 						var cneisdData:String = File.getContent(cneisdPath);
@@ -601,6 +608,7 @@ class CharacterEditor extends UIState {
 						trace('ERROR COMPLETING UNDO: $e');
 					};
 				}
+				#end
 			case CAnimCreate(animID, animData):
 				characterAnimsWindow.addAnimation(animData, animID, false);
 				playAnimation(animData.name);
