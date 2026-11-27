@@ -530,12 +530,15 @@ class Alphabet extends FlxSprite {
 	function checkNode(node:Xml):Void {
 		switch (node.nodeName) {
 			case "spritesheet":
-				if (frames == null)
-					var __ch = node.firstChild();
-					var __sheet = __ch == null ? "" : (__ch.nodeValue == null ? "" : __ch.nodeValue).trim();
+				// On web the parser can hand back no child node; guard so an empty sheet
+				// name cannot silently kill every letter animation.
+				var __ch = node.firstChild();
+				var __sheet = __ch == null ? "" : (__ch.nodeValue == null ? "" : __ch.nodeValue).trim();
+				if (frames == null) {
 					if (__sheet != "") frames = Paths.getFrames(__sheet);
-				else {
-					for (frame in Paths.getFrames(node.firstChild().nodeValue).frames)
+				} else {
+					var __f = Paths.getFrames(__sheet);
+					if (__f != null) for (frame in __f.frames)
 						frames.pushFrame(frame);
 				}
 			case "defaultAnim":

@@ -458,10 +458,12 @@ final class AudioAnalyzer {
 		#end
 	}
 
-	inline function __readData(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback) {
-		#if html5
+	#if html5
+	function __readData(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback) {
 		return;
-		#end
+	}
+	#else
+	inline function __readData(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback) {
 		var pos = Math.floor(startPos * __toBits), end = Math.min(Math.floor(endPos * __toBits), buffer.data.buffer.length), c = 0;
 		pos -= pos % __sampleSize;
 		end -= end % __sampleSize;
@@ -472,6 +474,7 @@ final class AudioAnalyzer {
 			pos += __wordSize;
 		}
 	}
+	#end
 
 	#if lime_cffi
 	inline function __canReadStream():Bool
