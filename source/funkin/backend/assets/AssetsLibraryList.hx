@@ -84,6 +84,19 @@ class AssetsLibraryList extends AssetLibrary {
 					content.pushOnce(e);
 			}
 			#end
+			#else
+			// A plain lime library exposes its entries through the paths map, which is
+			// all a folder listing needs. Without this every query returns nothing.
+			var entries:Dynamic = Reflect.field(l, "paths");
+			if (entries != null) {
+				var prefix:String = folder.endsWith("/") ? folder : folder + "/";
+				for (id in Reflect.fields(entries)) {
+					if (!id.startsWith(prefix)) continue;
+					var rel:String = id.substr(prefix.length);
+					if (rel.length > 0 && rel.indexOf("/") < 0) content.pushOnce(rel);
+				}
+			}
+			#end
 		}
 		return content;
 	}
@@ -101,6 +114,18 @@ class AssetsLibraryList extends AssetLibrary {
 				var lib = cast(l, IModsAssetLibrary);
 				for(e in lib.getFolders(folder))
 					content.pushOnce(e);
+			}
+			#end
+			#else
+			var entries:Dynamic = Reflect.field(l, "paths");
+			if (entries != null) {
+				var prefix:String = folder.endsWith("/") ? folder : folder + "/";
+				for (id in Reflect.fields(entries)) {
+					if (!id.startsWith(prefix)) continue;
+					var rel:String = id.substr(prefix.length);
+					var slash:Int = rel.indexOf("/");
+					if (slash > 0) content.pushOnce(rel.substr(0, slash));
+				}
 			}
 			#end
 		}
