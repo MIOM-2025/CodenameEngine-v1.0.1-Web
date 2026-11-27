@@ -5,6 +5,7 @@ import lime.media.AudioSource;
 import lime.media.AudioManager;
 
 @:access(lime.media.AudioBuffer)
+@:access(lime.media.AudioSource)
 class HTML5AudioSource
 {
 	private var completed:Bool;

@@ -5,7 +5,7 @@
 
 		<!-- OpenFL & Lime (Required for Flixel) -->
 		<git name="openfl" url="https://github.com/CodenameCrew/cne-openfl" ref="0eaf6da141f7311c227e692bab11d674f03bc388" />
-		<git name="lime" url="https://github.com/QQQEB159/lime-8.1.2" />
+		<git name="lime" url="https://github.com/CodenameCrew/cne-lime" />
 		<!-- <git name="lime" url="https://github.com/CodenameCrew/cne-lime" />  disabled for now until fixed -->
 
 		<!-- Flixel -->
