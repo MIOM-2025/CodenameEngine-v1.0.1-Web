@@ -218,7 +218,9 @@ class AudioBuffer
 	{
 		if (path == null) return false;
 		var p = path.toLowerCase();
-		return p.indexOf("music/") >= 0;
+		// Songs live in assets/songs (Inst/Voices, ~75 MB) and menu tracks in
+		// assets/music. Both must stream; decoding either one into PCM costs GBs.
+		return p.indexOf("music/") >= 0 || p.indexOf("songs/") >= 0;
 	}
 	#end
 
