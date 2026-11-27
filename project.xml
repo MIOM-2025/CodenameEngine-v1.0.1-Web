@@ -150,8 +150,10 @@
 
 	<define name="NO_PRELOAD_ALL" />
 
-	<library name="assets"    preload="false" if="NO_PRELOAD_ALL"/>
-	<library name="assets"    preload="false" if="NO_PRELOAD_ALL" />
+	<!-- Web builds must not pull the whole library at boot: 977 files / 183 MB would
+	     be fetched and decoded up front. Resources are loaded on demand instead. -->
+	<library name="assets" preload="false" if="web" />
+	<library name="assets" preload="true" unless="web" />
 
 	<section unless="TEST_BUILD">
 		<assets path="assets/"    rename="assets"	exclude="*.mp3,music/pixel/*,sounds/cutscenes/*" if="web"/>
