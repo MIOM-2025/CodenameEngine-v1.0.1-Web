@@ -6,7 +6,7 @@ interface IModsAssetLibrary {
 	public var libName:String;
 	public var basePath:String;
 
-	#if (MOD_SUPPORT && !js)
+	#if MOD_SUPPORT
 	public var _parsedAsset:String;
 
 	private function getAssetPath():String;

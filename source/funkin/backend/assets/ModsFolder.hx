@@ -9,7 +9,7 @@ import openfl.utils.AssetLibrary;
 import openfl.utils.AssetManifest;
 
 using StringTools;
-#if (MOD_SUPPORT && !js)
+#if MOD_SUPPORT
 import sys.FileSystem;
 #end
 
@@ -25,13 +25,17 @@ class ModsFolder {
 	 */
 	public static var currentModFolder:String = null;
 	/**
+	 * Path to the `assets` folder.
+	 */
+	public static var assetsPath:String = #if mobile StorageUtil.getStorageDirectory(true) + #end "assets/";
+	/**
 	 * Path to the `mods` folder.
 	 */
-	public static var modsPath:String = "./mods/";
+	public static var modsPath:String = #if mobile StorageUtil.getStorageDirectory(true) + #end "mods/";
 	/**
 	 * Path to the `addons` folder.
 	 */
-	public static var addonsPath:String = "./addons/";
+	public static var addonsPath:String = #if mobile StorageUtil.getStorageDirectory(true) + #end "addons/";
 
 	/**
 	 * If accessing a file as assets/data/global/LIB_mymod.hx should redirect to mymod:assets/data/global.hx
@@ -47,6 +51,11 @@ class ModsFolder {
 	 * Initializes `mods` folder.
 	 */
 	public static function init() {
+		#if !html5
+		if (!FileSystem.exists(assetsPath)) FileSystem.createDirectory(assetsPath);
+		if (!FileSystem.exists(modsPath)) FileSystem.createDirectory(modsPath);
+		if (!FileSystem.exists(addonsPath)) FileSystem.createDirectory(addonsPath);
+		#end
 		if(!getModsList().contains(Options.lastLoadedMod)) {
 			if(Options.lastLoadedMod != null)
 				Logs.warn("Mod \"" + Options.lastLoadedMod + "\" not found in mods list, switching to base game!");
@@ -82,7 +91,7 @@ class ModsFolder {
 	 * @param force Whenever the mod should be reloaded if it has already been loaded
 	 */
 	public static function loadModLib(path:String, force:Bool = false, ?modName:String) {
-		#if (MOD_SUPPORT && !js)
+		#if MOD_SUPPORT
 		if (FileSystem.exists('$path.zip'))
 			return loadLibraryFromZip('$path'.toLowerCase(), '$path.zip', force, modName);
 		else
@@ -95,7 +104,7 @@ class ModsFolder {
 
 	public static function getModsList():Array<String> {
 		var mods:Array<String> = [];
-		#if (MOD_SUPPORT && !js)
+		#if MOD_SUPPORT
 		if (!FileSystem.exists(modsPath)) {
 			// Mods directory does not exist yet, create it
 			FileSystem.createDirectory(modsPath);
@@ -165,7 +174,7 @@ class ModsFolder {
 		return openLib;
 	}
 
-	#if (MOD_SUPPORT && !js)
+	#if MOD_SUPPORT
 	public static function loadLibraryFromFolder(libName:String, folder:String, force:Bool = false, ?modName:String, ?tag:AssetSource = MODS) {
 		return prepareModLibrary(libName, new ModsFolderLibrary(folder, libName, modName), force, tag);
 	}

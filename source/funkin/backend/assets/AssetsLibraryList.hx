@@ -77,7 +77,7 @@ class AssetsLibraryList extends AssetLibrary {
 			l = getCleanLibrary(l);
 
 			// TODO: do base folder scanning
-			#if (MOD_SUPPORT && !js)
+			#if MOD_SUPPORT
 			if (l is IModsAssetLibrary) {
 				var lib = cast(l, IModsAssetLibrary);
 				for(e in lib.getFiles(folder))
@@ -96,7 +96,7 @@ class AssetsLibraryList extends AssetLibrary {
 			l = getCleanLibrary(l);
 
 			// TODO: do base folder scanning
-			#if (MOD_SUPPORT && !js)
+			#if MOD_SUPPORT
 			if (l is IModsAssetLibrary) {
 				var lib = cast(l, IModsAssetLibrary);
 				for(e in lib.getFolders(folder))
@@ -154,14 +154,14 @@ class AssetsLibraryList extends AssetLibrary {
 		#if (sys && TEST_BUILD)
 		Logs.infos("Used cne test / cne build. Switching into source assets.");
 
-		#if (MOD_SUPPORT && !js)
-		ModsFolder.modsPath = './${Main.pathBack}mods/';
-		ModsFolder.addonsPath = './${Main.pathBack}addons/';
+		#if MOD_SUPPORT
+		ModsFolder.modsPath = '${Main.pathBack}mods/';
+		ModsFolder.addonsPath = '${Main.pathBack}addons/';
 		#end
 
-		__defaultLibraries.push(ModsFolder.loadLibraryFromFolder('assets', './${Main.pathBack}assets/', true, SOURCE));
+		__defaultLibraries.push(ModsFolder.loadLibraryFromFolder('assets', '${Main.pathBack}assets/', true, SOURCE));
 		#elseif USE_ADAPTED_ASSETS
-		__defaultLibraries.push(ModsFolder.loadLibraryFromFolder('assets', './assets/', true, SOURCE));
+		__defaultLibraries.push(ModsFolder.loadLibraryFromFolder('assets', #if mobile StorageUtil.getStorageDirectory(true) + #end 'assets/', true, SOURCE));
 		#end
 		for (d in __defaultLibraries) addLibrary(d);
 	}
@@ -206,5 +206,22 @@ class AssetsLibraryList extends AssetLibrary {
 			if (al.__proxy != null) l = al.__proxy;
 		}
 		return l;
+	}
+	
+	override public function list(type:String):Array<String>
+	{
+		var items = [];
+
+		for (library in libraries)
+		{
+			var libraryItems = library.list(type);
+
+			if (libraryItems != null)
+			{
+				items = items.concat(libraryItems);
+			}
+		}
+
+		return items;
 	}
 }

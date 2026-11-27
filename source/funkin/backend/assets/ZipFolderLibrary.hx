@@ -7,7 +7,7 @@ import lime.text.Font;
 import lime.utils.Bytes;
 import openfl.utils.AssetLibrary;
 
-#if (MOD_SUPPORT && !js)
+#if MOD_SUPPORT
 import funkin.backend.utils.SysZip.SysZipEntry;
 import funkin.backend.utils.SysZip;
 

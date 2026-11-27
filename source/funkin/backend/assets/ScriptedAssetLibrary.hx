@@ -8,7 +8,7 @@ import lime.utils.AssetLibrary;
 import lime.utils.Assets as LimeAssets;
 import lime.utils.Bytes;
 
-#if (MOD_SUPPORT && !js)
+#if MOD_SUPPORT
 import sys.FileStat;
 import sys.FileSystem;
 #end
@@ -20,7 +20,8 @@ class ScriptedAssetLibrary extends ModsFolderLibrary {
 	public var scriptName:String;
 	private static var nullValue:Dynamic = {};
 
-	public function new(scriptName:String, args:Array<Dynamic> = null, basePath:String="./assets/", libName:String="assets", ?modName:String) {
+	public function new(scriptName:String, args:Array<Dynamic> = null, basePath:Null<String> = null, libName:String="assets", ?modName:String) {
+		if(basePath == null) basePath = #if mobile StorageUtil.getStorageDirectory(true) + #end "assets/";
 		if(modName == null) modName = scriptName;
 		super(basePath, libName, modName);
 		this.scriptName = scriptName;
@@ -36,7 +37,7 @@ class ScriptedAssetLibrary extends ModsFolderLibrary {
 		return '(ScriptedAssetLibrary: $libName/$modName/$scriptName)';
 	}
 
-	#if (MOD_SUPPORT && !js)
+	#if MOD_SUPPORT
 	public override function getEditedTime(asset:String):Null<Float> {
 		var result:Dynamic = script.call("getEditedTime", [asset]);
 		if(result != null) {

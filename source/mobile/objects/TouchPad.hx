@@ -145,7 +145,7 @@ class TouchPad extends MobileInputManager implements IMobileControls
 	{
 		var button = new TouchButton(X, Y, IDs);
 		var buttonLabelGraphicPath:String = "";
-		#if (MOD_SUPPORT && !js)
+		#if MOD_SUPPORT
 		final moddyFolder:String = (ModsFolder.currentModFolder != null
 			&& ModsFolder.currentModFolder != "default") ? '${ModsFolder.modsPath}${ModsFolder.currentModFolder}/mobile' : '';
 		#end
@@ -154,7 +154,7 @@ class TouchPad extends MobileInputManager implements IMobileControls
 		{
 			var frames:FlxGraphic = null;
 			final defaultPath:String = 'assets/mobile/images/virtualpad/${Graphic.toLowerCase()}.png';
-			#if (MOD_SUPPORT && !js)
+			#if MOD_SUPPORT
 			final moddyPath:String = '$moddyFolder/images/virtualpad/${Graphic.toLowerCase()}.png';
 			if (FileSystem.exists(moddyPath))
 				buttonLabelGraphicPath = moddyPath;
@@ -179,13 +179,13 @@ class TouchPad extends MobileInputManager implements IMobileControls
 		{
 			var buttonGraphicPath:String = "";
 			final defaultPath:String = 'assets/mobile';
-			#if (MOD_SUPPORT && !js)
+			#if MOD_SUPPORT
 			final moddyPath:String = '$moddyFolder/mobile';
 			#end
 			for (file in ["bg", Graphic.toUpperCase()])
 			{
 				var path:String = '';
-				#if (MOD_SUPPORT && !js)
+				#if MOD_SUPPORT
 				path = '$moddyPath/images/touchpad/${file}.png';
 				if (FileSystem.exists(path))
 					if (file == "bg")

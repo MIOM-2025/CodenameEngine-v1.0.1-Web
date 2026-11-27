@@ -491,8 +491,11 @@ class Alphabet extends FlxSprite {
 		var anim = (data.isDefault) ?
 			component.anim.replace("LOWERLETTER", char.toLowerCase()).replace("UPPERLETTER", char.toUpperCase()).replace("LETTER", char) :
 			component.anim;
+		}
 		animation.addByPrefix(name, anim, fps);
-		return animation.exists(name) ? animation.getByName(name) : null;
+		var __ok = animation.exists(name);
+		if (__ok) return animation.getByName(name);
+		return null;
 	}
 
 	function getLetterAnim(char:String, data:AlphabetLetterData, component:AlphabetComponent, index:Int):FlxAnimation {

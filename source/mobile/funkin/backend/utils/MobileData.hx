@@ -27,7 +27,7 @@ class MobileData
 
 		setDefaultMap('assets/mobile/DPadModes', dpadModes);
 		setDefaultMap('assets/mobile/ActionModes', actionModes);
-		#if (MOD_SUPPORT && !js)
+		#if MOD_SUPPORT
 		final moddyFolder:String = (ModsFolder.currentModFolder != null
 			&& ModsFolder.currentModFolder != "default") ? '${ModsFolder.modsPath}${ModsFolder.currentModFolder}/mobile' : '';
 		if (FileSystem.exists(moddyFolder) && FileSystem.isDirectory(moddyFolder))
@@ -130,7 +130,7 @@ class MobileData
 		return results.map(f -> f.substr(f.lastIndexOf("/") + 1));
 	}
 
-	#if (MOD_SUPPORT && !js)
+	#if MOD_SUPPORT
 	private static function setModMap(folder:String, map:Map<String, TouchButtonsData>)
 	{
 		for (file in FileSystem.readDirectory(folder))
