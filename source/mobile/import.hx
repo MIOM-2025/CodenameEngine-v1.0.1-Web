@@ -22,7 +22,9 @@ import mobile.funkin.backend.utils.MobileData;
 import mobile.funkin.backend.system.input.MobileInputID;
 import mobile.funkin.backend.system.input.MobileInputManager;
 #end
+#if mobile
 import mobile.funkin.backend.utils.StorageUtil;
+#end
 
 #if android
 import android.content.Context as AndroidContext;
