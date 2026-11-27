@@ -297,9 +297,13 @@ class TitleState extends MusicBeatState
 		if (!skippedIntro)
 		{
 			FlxG.camera.flash(FlxColor.WHITE, 4);
-			remove(blackScreen);
-			blackScreen.destroy();
-			remove(textGroup);
+			// beatHit can land before the intro sprites exist (more likely on web where
+			// the music starts while the state is still being built), so guard them.
+			if (blackScreen != null) {
+				remove(blackScreen);
+				blackScreen.destroy();
+			}
+			if (textGroup != null) remove(textGroup);
 			skippedIntro = true;
 		}
 	}

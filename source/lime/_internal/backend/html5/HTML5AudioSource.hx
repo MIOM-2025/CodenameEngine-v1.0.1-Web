@@ -13,6 +13,10 @@ class HTML5AudioSource
 	private var id:Int;
 	private var length:Null<Float>;
 	private var loops:Int;
+	// AudioSource.loopTime is a property whose setter calls back into this backend,
+	// so the backend has to keep its own copy; reading/writing parent.loopTime here
+	// recurses until the stack explodes.
+	private var __cneLoopTime:Float = 0;
 	private var parent:AudioSource;
 	private var playing:Bool;
 	private var position:Vector4;
@@ -102,7 +106,7 @@ class HTML5AudioSource
 		{
 			loops--;
 			stop();
-			if (parent.loopTime != null && parent.loopTime > 0) setCurrentTime(parent.loopTime);
+			if (__cneLoopTime > 0) setCurrentTime(__cneLoopTime);
 			play();
 			parent.onLoop.dispatch();
 			return;
@@ -224,11 +228,11 @@ class HTML5AudioSource
 	}
 
 	public function getLoopTime():Float {
-		return parent.loopTime;
+		return __cneLoopTime;
 	}
 
 	public function setLoopTime(value:Float):Float {
-		return parent.loopTime = value;
+		return __cneLoopTime = value;
 	}
 
 	public function getPitch():Float
