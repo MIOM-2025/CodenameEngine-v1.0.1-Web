@@ -129,12 +129,16 @@ jobs:
       - name: Build HTML5
         run: haxelib run lime build html5
 
+      - name: Clear web asset preload flags
+        run: |
+          python3 .github/scripts/fix_web_manifest.py export/release/html5/bin/manifest/default.json
+
       - name: Show output
         if: always()
         run: |
           find export -maxdepth 4 -type d 2>/dev/null | head -40
           du -sh export/release/html5/bin 2>/dev/null || true
-          du -sh mods/dustin/assets 2>/dev/null || true
+          du -sh mods 2>/dev/null || true
 
       - name: Deploy to gh-pages
         if: success()
@@ -149,6 +153,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dustin-html5
+          name: codename-engine-v1.0.1-web
           path: export/release/html5/bin/
           if-no-files-found: warn
