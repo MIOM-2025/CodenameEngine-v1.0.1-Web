@@ -130,30 +130,7 @@ jobs:
         run: haxelib run lime build html5
 
       - name: Add on-screen controls and bust the browser cache
-        run: |
-          python3 - <<'PYEOF'
-          import os, re
-          pad = open('.github/scripts/touch-controls.html', encoding='utf-8').read()
-          p = 'export/release/html5/bin/index.html'
-          s = open(p, encoding='utf-8').read()
-          if 'cne-pad' not in s:
-              s = s.replace('</body>', pad + '
-</body>', 1)
-          rev = os.environ.get('GITHUB_SHA', '')[:7]
-          s = re.sub(r'(src="[^"]*\.js)(\?[^"]*)?(")', lambda m: m.group(1) + '?v=' + rev + m.group(3), s)
-          open(p, 'w', encoding='utf-8').write(s)
-          print('touch pad + cache bust', rev)
-          PYEOF
-        run: |
-          python3 - <<'PYEOF'
-          import os, re
-          p = 'export/release/html5/bin/index.html'
-          s = open(p, encoding='utf-8').read()
-          rev = os.environ.get('GITHUB_SHA', '')[:7]
-          s2 = re.sub(r'(src="[^"]*\.js)(\?[^"]*)?(")', lambda m: m.group(1) + '?v=' + rev + m.group(3), s)
-          open(p, 'w', encoding='utf-8').write(s2)
-          print('cache-busted', rev)
-          PYEOF
+        run: python3 .github/scripts/patch_index.py
 
       - name: Clear web asset preload flags
         run: |

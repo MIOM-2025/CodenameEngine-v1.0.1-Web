@@ -218,9 +218,10 @@ class AudioBuffer
 	{
 		if (path == null) return false;
 		var p = path.toLowerCase();
-		// Songs live in assets/songs (Inst/Voices, ~75 MB) and menu tracks in
-		// assets/music. Both must stream; decoding either one into PCM costs GBs.
-		return p.indexOf("music/") >= 0 || p.indexOf("songs/") >= 0;
+		// Only menu tracks stream. A song under assets/songs is decoded one at a
+		// time (~3 MB -> ~35 MB of PCM) and needs a real duration for the chart,
+		// which the <audio> path does not report reliably.
+		return p.indexOf("music/") >= 0;
 	}
 	#end
 

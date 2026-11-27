@@ -63,7 +63,9 @@
     if (!held[code]) return;
     held[code] = false;
     el.classList.remove('cne-active');
-    fire('keyup', code);
+    // Flixel samples key state on frame boundaries, and a tap is shorter than a
+    // frame, so the engine would never see justPressed. Hold the key down a bit.
+    setTimeout(function () { fire('keyup', code); }, 90);
   }
 
   Array.prototype.forEach.call(pad.querySelectorAll('.cne-btn'), function (el) {
