@@ -8,6 +8,8 @@ import haxe.io.Path;
 
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 
 using StringTools;

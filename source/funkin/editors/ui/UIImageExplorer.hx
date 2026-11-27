@@ -11,9 +11,13 @@ import haxe.io.Path;
 import openfl.display.BitmapData;
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 #if sys
 import sys.io.File;
+#else
+import funkin.backend.utils.stubs.File;
 #end
 
 using StringTools;
@@ -208,10 +212,10 @@ class UIImageExplorer extends UIFileExplorer {
 				size += info.size;
 
 				spritemapPath = spritemapPath.replace('/', '\\');
-				imageFiles.set(Path.withoutDirectory(spritemapPath), sys.io.File.getBytes(spritemapPath));
+				imageFiles.set(Path.withoutDirectory(spritemapPath), #if sys sys.io.File.getBytes(spritemapPath) #else null #end);
 			}
 
-			file = cast sys.io.File.getBytes(filePath = spritemapPath);
+			file = cast #if sys sys.io.File.getBytes(filePath = spritemapPath) #else null #end;
 			image = BitmapData.fromBytes(file).crop();
 
 		} else {

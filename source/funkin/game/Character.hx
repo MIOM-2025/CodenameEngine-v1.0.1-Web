@@ -2,6 +2,8 @@ package funkin.game;
 
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 import flixel.util.FlxSpriteUtil;
 import openfl.display.Graphics;

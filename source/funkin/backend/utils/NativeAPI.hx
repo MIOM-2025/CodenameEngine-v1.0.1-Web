@@ -40,7 +40,9 @@ class NativeAPI {
 	 */
 	public static function getFileAttributesRaw(path:String, useAbsolute:Bool = true):Int {
 		#if windows
+		#if sys
 		if(useAbsolute) path = sys.FileSystem.absolutePath(path);
+		#end
 		return Windows.getFileAttributes(path);
 		#else
 		return -1;
@@ -59,7 +61,9 @@ class NativeAPI {
 	 */
 	public static function setFileAttributes(path:String, attrib:OneOfThree<NativeAPI.FileAttribute, FileAttributeWrapper, Int>, useAbsolute:Bool = true):Int {
 		#if windows
+		#if sys
 		if(useAbsolute) path = sys.FileSystem.absolutePath(path);
+		#end
 		return Windows.setFileAttributes(path, attrib is FileAttributeWrapper ? cast(attrib, FileAttributeWrapper).getValue() : cast(attrib, Int));
 		#else
 		return 0;

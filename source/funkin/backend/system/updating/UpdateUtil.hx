@@ -7,12 +7,18 @@ import lime.app.Application;
 
 #if sys
 import sys.thread.Mutex;
+#else
+import funkin.backend.utils.stubs.Mutex;
 #end
 #if sys
 import sys.thread.Thread;
+#else
+import funkin.backend.utils.stubs.Thread;
 #end
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 
 import haxe.io.Path;

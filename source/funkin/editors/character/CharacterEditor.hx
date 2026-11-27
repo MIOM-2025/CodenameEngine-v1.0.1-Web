@@ -19,9 +19,13 @@ import haxe.xml.Printer;
 import funkin.editors.ui.UIImageExplorer.ImageSaveData;
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 #if sys
 import sys.io.File;
+#else
+import funkin.backend.utils.stubs.File;
 #end
 
 class CharacterEditor extends UIState {

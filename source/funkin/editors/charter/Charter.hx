@@ -22,6 +22,8 @@ import funkin.editors.ui.UITopMenu.UITopMenuButton;
 import haxe.Json;
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 import flixel.util.FlxColor;
 

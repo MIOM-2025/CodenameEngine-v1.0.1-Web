@@ -2,9 +2,13 @@ package funkin.backend.system;
 
 #if sys
 import sys.io.File;
+#else
+import funkin.backend.utils.stubs.File;
 #end
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 import flixel.addons.transition.FlxTransitionSprite.GraphicTransTileDiamond;
 import flixel.addons.transition.FlxTransitionableState;
@@ -68,7 +72,9 @@ class Main extends Sprite
 
 	public static function preInit() {
 		funkin.backend.utils.NativeAPI.registerAsDPICompatible();
+		#if sys
 		funkin.backend.system.CommandLineHandler.parseCommandLine(Sys.args());
+		#end
 		funkin.backend.system.Main.fixWorkingDirectory();
 	}
 

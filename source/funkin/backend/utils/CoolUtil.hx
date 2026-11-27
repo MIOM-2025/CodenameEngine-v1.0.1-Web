@@ -10,6 +10,8 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxFramesCollection;
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 import flixel.text.FlxText;
 import funkin.backend.utils.XMLUtil.TextFormat;

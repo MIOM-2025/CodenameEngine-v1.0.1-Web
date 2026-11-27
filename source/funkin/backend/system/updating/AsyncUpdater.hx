@@ -11,12 +11,18 @@ import openfl.net.URLRequest;
 import openfl.utils.ByteArray;
 #if sys
 import sys.FileSystem;
+#else
+import funkin.backend.utils.stubs.FileSystem;
 #end
 #if sys
 import sys.io.File;
+#else
+import funkin.backend.utils.stubs.File;
 #end
 #if sys
 import sys.io.FileOutput;
+#else
+import funkin.backend.utils.stubs.FileOutput;
 #end
 
 class AsyncUpdater {

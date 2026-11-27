@@ -11,6 +11,8 @@ import haxe.io.Path;
 import haxe.xml.Access;
 #if sys
 import sys.io.File;
+#else
+import funkin.backend.utils.stubs.File;
 #end
 #if VIDEO_CUTSCENES
 import hxvlc.flixel.FlxVideoSprite;
