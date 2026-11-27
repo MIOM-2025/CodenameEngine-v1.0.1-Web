@@ -102,7 +102,7 @@ class HTML5AudioSource
 		{
 			loops--;
 			stop();
-			if (loopTime != null && loopTime > 0) setCurrentTime(loopTime);
+			if (parent.loopTime != null && parent.loopTime > 0) setCurrentTime(parent.loopTime);
 			play();
 			parent.onLoop.dispatch();
 			return;
@@ -224,11 +224,11 @@ class HTML5AudioSource
 	}
 
 	public function getLoopTime():Float {
-		return loopTime;
+		return parent.loopTime;
 	}
 
 	public function setLoopTime(value:Float):Float {
-		return loopTime = value;
+		return parent.loopTime = value;
 	}
 
 	public function getPitch():Float
