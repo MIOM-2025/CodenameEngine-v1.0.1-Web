@@ -54,6 +54,10 @@ class CreditsCodename extends funkin.options.TreeMenuScreen {
 
 	public function updateMarkup() {
 		if (parent == null) return;
+		// The contributor list comes from the GitHub API, which browsers may block;
+		// without it there is nothing to mark up.
+		if (Options.contributors == null || Options.contributors.length == 0) return;
+		if (curSelected < 0 || curSelected >= Options.contributors.length) return;
 		var text:String = parent.descLabel.text;
 		parent.descLabel.text = "";
 		parent.descLabel.applyMarkup(text, contribFormats = [
@@ -68,6 +72,11 @@ class CreditsCodename extends funkin.options.TreeMenuScreen {
 	}
 
 	public function checkUpdate():Bool {
+		#if web
+		// GitHub's API has no CORS header for this call, so it always fails in a
+		// browser; skip the request and the error dialog that follows it.
+		return false;
+		#end
 		var curTime:Float = Date.now().getTime();
 		if(Options.lastUpdated != null && curTime < Options.lastUpdated + 120000) return false;  // Fuck you Github rate limits  - Nex
 		Options.lastUpdated = curTime;
@@ -109,8 +118,10 @@ class CreditsCodename extends funkin.options.TreeMenuScreen {
 	}
 
 	public function displayList() {
+		if (Options.contributors == null || Options.contributors.length == 0) return;
 		//if (curSelected > Options.contributors.length - 1) changeSelection(-(curSelected - (Options.contributors.length - 1)));
 		if (curSelected > Options.contributors.length - 1) curSelected = Options.contributors.length - 1;
+		if (curSelected < 0) curSelected = 0;
 		changeSelection(0, true);
 
 		while (members.length > 0) {
