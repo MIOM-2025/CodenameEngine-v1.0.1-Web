@@ -8,7 +8,6 @@ import openfl.display.Sprite;
 import openfl.events.KeyboardEvent;
 import openfl.text.TextFormat;
 import openfl.ui.Keyboard;
-import flixel.util.FlxTimer;
 
 class Framerate extends Sprite {
 	public static var instance:Framerate;
@@ -21,7 +20,7 @@ class Framerate extends Sprite {
 	public static var codenameBuildField:CodenameBuildField;
 	#end
 
-	public static var fontName:String = null;
+	public static var fontName:String = #if windows '${Sys.getEnv("windir")}\\Fonts\\consola.ttf' #else "_typewriter" #end;
 
 	/**
 	 * 0: FPS INVISIBLE
@@ -43,16 +42,11 @@ class Framerate extends Sprite {
 		return __bitmap;
 	}
 
-	#if mobile
-	#if android public var presses:Int = 0; #end
-	public var sillyTimer:FlxTimer = new FlxTimer();
-	#end
-	
 	public function new() {
 		super();
 		if (instance != null) throw "Cannot create another instance";
 		instance = this;
-		textFormat = new TextFormat(openfl.utils.Assets.getFont("assets/fonts/DTM-Mono.ttf").fontName, 12, -1);
+		textFormat = new TextFormat(fontName, 12, -1);
 
 		isLoaded = true;
 
@@ -82,11 +76,6 @@ class Framerate extends Sprite {
 		__addCategory(new FlixelInfo());
 		__addCategory(new SystemInfo());
 		__addCategory(new AssetTreeInfo());
-		#if web
-		__addToList(diagField = new openfl.text.TextField());
-		diagField.defaultTextFormat = new TextFormat(textFormat.font, 12, 0x00ff00);
-		diagField.text = 'diag: loading...';
-		#end
 
 		#if (gl_stats && !disable_cffi && (!html5 || !canvas))
 		__addCategory(new StatsInfo());
@@ -117,64 +106,17 @@ class Framerate extends Sprite {
 	}
 
 
-	#if web
-	var diagField:openfl.text.TextField;
-	var diagDone:Bool = false;
-	#end
-
 	var debugAlpha:Float = 0;
 	public override function __enterFrame(t:Int) {
-		#if web
-		if (!diagDone && diagField != null) {
-			diagDone = true;
-			try {
-				var c = FlxG.stage.window.context;
-				var bd = openfl.utils.Assets.getBitmapData('assets/images/menus/titlescreen/logo.png');
-				diagField.text = 'ctx=' + (c == null ? 'NULL' : Std.string(c.type))
-					+ ' bd=' + (bd == null ? 'null' : (bd.width + 'x' + bd.height))
-					+ ' tile=' + FlxG.renderTile + ' blit=' + FlxG.renderBlit
-					+ ' rw=' + FlxG.width + 'x' + FlxG.height;
-			} catch (e:Dynamic) { diagField.text = 'diag err ' + e; }
-		}
-		#end
 		alpha = CoolUtil.fpsLerp(alpha, debugMode > 0 ? 1 : 0, 0.5);
 		debugAlpha = CoolUtil.fpsLerp(debugAlpha, debugMode > 1 ? 1 : 0, 0.5);
 
-		#if android
-		if(FlxG.android.justReleased.BACK){
-			sillyTimer.cancel();
-			++presses;
-			if(presses >= 3){
-				debugMode = (debugMode + 1) % 3;
-				presses = 0;
-				return;
-			}
-			sillyTimer.start(0.3, (tmr:FlxTimer) -> presses = 0);
-		}
-		#elseif ios
-		for(camera in FlxG.cameras.list) {
-			var pos = FlxG.mouse.getScreenPosition(camera);
-			if (pos.x >= FlxG.game.x + 10 + offset.x &&
-				pos.x <= FlxG.game.x + offset.x + 80 &&
-				pos.y >= FlxG.game.y + 2 + offset.y &&
-				pos.y <= FlxG.game.y + 2 + offset.y + 60)
-			{
-				if(FlxG.mouse.justPressed)
-					sillyTimer.start(0.4, (tmr:FlxTimer) -> debugMode = (debugMode + 1) % 3);
-
-				if(FlxG.mouse.justReleased)
-					sillyTimer.cancel();
-			} else if(sillyTimer.active && !sillyTimer.finished)
-				sillyTimer.cancel();
-		}
-		#end
-		
 		if (alpha < 0.05) return;
 		super.__enterFrame(t);
 		bgSprite.alpha = debugAlpha * 0.5;
 
-		x = #if mobile FlxG.game.x + #end 10 + offset.x;
-		y = #if mobile FlxG.game.y + #end 2 + offset.y;
+		x = 10 + offset.x;
+		y = 2 + offset.y;
 
 		var width = MathUtil.maxSmart(fpsCounter.width, memoryCounter.width #if SHOW_BUILD_ON_FPS , codenameBuildField.width #end) + (x*2);
 		var height = #if SHOW_BUILD_ON_FPS codenameBuildField.y + codenameBuildField.height #else memoryCounter.y + memoryCounter.height #end;
@@ -199,12 +141,4 @@ class Framerate extends Sprite {
 			y = c.y + c.height + 4;
 		}
 	}
-	
-	#if mobile
-	public inline function setScale(?scale:Float){
-		if(scale == null)
-			scale = Math.min(FlxG.stage.window.width / FlxG.width, FlxG.stage.window.height / FlxG.height);
-		scaleX = scaleY = #if android (scale > 1 ? scale : 1) #else (scale < 1 ? scale : 1) #end;
-	}
-	#end
 }
