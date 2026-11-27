@@ -83,7 +83,6 @@ class AssetsLibraryList extends AssetLibrary {
 				for(e in lib.getFiles(folder))
 					content.pushOnce(e);
 			}
-			#end
 			#else
 			// A plain lime library exposes its entries through the paths map, which is
 			// all a folder listing needs. Without this every query returns nothing.
@@ -115,7 +114,6 @@ class AssetsLibraryList extends AssetLibrary {
 				for(e in lib.getFolders(folder))
 					content.pushOnce(e);
 			}
-			#end
 			#else
 			var entries:Dynamic = Reflect.field(l, "paths");
 			if (entries != null) {
