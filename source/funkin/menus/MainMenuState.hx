@@ -86,8 +86,6 @@ class MainMenuState extends MusicBeatState
 		versionText.scrollFactor.set();
 		add(versionText);
 
-		addTouchPad('UP_DOWN', 'A_B_M_E');
-		
 		changeItem();
 
 		devModeWarning = new FunkinText(0, FlxG.height - 50, 1280, "You have to enable DEVELOPER MODE in the miscellaneous settings!", 24);
@@ -109,7 +107,7 @@ class MainMenuState extends MusicBeatState
 		if (!selectedSomethin)
 		{
 			if (canAccessDebugMenus) {
-				if (controls.DEV_ACCESS #if TOUCH_CONTROLS || touchPad.buttonE.justPressed #end) {
+				if (controls.DEV_ACCESS) {
 					persistentUpdate = false;
 					persistentDraw = true;
 					openSubState(new funkin.editors.EditorPicker());
@@ -145,7 +143,7 @@ class MainMenuState extends MusicBeatState
 				FlxG.switchState(new TitleState());
 
 			#if MOD_SUPPORT
-			if (controls.SWITCHMOD #if TOUCH_CONTROLS || touchPad.buttonM.justPressed #end) {
+			if (controls.SWITCHMOD) {
 				openSubState(new ModSwitchMenu());
 				persistentUpdate = false;
 				persistentDraw = true;

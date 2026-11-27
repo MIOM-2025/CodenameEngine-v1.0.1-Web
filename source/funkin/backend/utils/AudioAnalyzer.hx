@@ -2,9 +2,7 @@ package funkin.backend.utils;
 
 import flixel.sound.FlxSound;
 import lime.media.AudioBuffer;
-#if !html5
 import lime.utils.ArrayBufferView.ArrayBufferIO;
-#end
 import lime.utils.ArrayBuffer;
 
 #if (lime_cffi && lime_vorbis)
@@ -33,20 +31,15 @@ final class AudioAnalyzer {
 	 * @param wordSize How many bytes to get with to one byte (Usually it's bitsPerSample / 8 or bitsPerSample >> 3).
 	 * @return Byte from the audio buffer with specified position.
 	 */
-	public static function getByte(buffer:Dynamic, position:Int, wordSize:Int):Int {
-		#if html5
-		return 0;
-		#else
-		var buf2:ArrayBuffer = cast buffer;
-		if (wordSize == 2) return inline ArrayBufferIO.getInt16(buf2, position);
+	public static function getByte(buffer:ArrayBuffer, position:Int, wordSize:Int):Int {
+		if (wordSize == 2) return inline ArrayBufferIO.getInt16(buffer, position);
 		else if (wordSize == 3) {
-			var b = inline ArrayBufferIO.getUint16(buf2, position) | (buf2.get(position + 2) << 16);
+			var b = inline ArrayBufferIO.getUint16(buffer, position) | (buffer.get(position + 2) << 16);
 			if (b & 0x800000 != 0) return b - 0x1000000;
 			else return b;
 		}
-		else if (wordSize == 4) return inline ArrayBufferIO.getInt32(buf2, position);
-		else return inline ArrayBufferIO.getUint8(buf2, position) - 128;
-		#end
+		else if (wordSize == 4) return inline ArrayBufferIO.getInt32(buffer, position);
+		else return inline ArrayBufferIO.getUint8(buffer, position) - 128;
 	}
 
 	/**
@@ -105,8 +98,8 @@ final class AudioAnalyzer {
 	static var __freqImags:Array<Array<Float>> = [];
 	#if (target.threaded)
 	static var __mutex:Mutex = new Mutex();
-	#end
 	static var __freqCalculating:Int = 0;
+	#end
 
 	/**
 	 * Gets frequencies from the samples.
@@ -458,7 +451,7 @@ final class AudioAnalyzer {
 	}
 
 	inline function __readData(startPos:Float, endPos:Float, callback:AudioAnalyzerCallback) {
-		var pos = Math.floor(startPos * __toBits), end = Math.min(Math.floor(endPos * __toBits), #if js buffer.data.buffer.byteLength #else buffer.data.buffer.length #end), c = 0;
+		var pos = Math.floor(startPos * __toBits), end = Math.min(Math.floor(endPos * __toBits), buffer.data.buffer.length), c = 0;
 		pos -= pos % __sampleSize;
 		end -= end % __sampleSize;
 

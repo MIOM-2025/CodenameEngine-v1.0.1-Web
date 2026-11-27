@@ -9,14 +9,8 @@ import haxe.Json;
 import haxe.io.Bytes;
 import haxe.io.Path;
 import openfl.display.BitmapData;
-	#if sys
-#if !html5
 import sys.FileSystem;
-#end
-	#end
-	#if sys
 import sys.io.File;
-	#end
 
 using StringTools;
 using funkin.backend.utils.BitmapUtil;
@@ -66,7 +60,6 @@ class UIImageExplorer extends UIFileExplorer {
 		directoryBG.members.push(directoryTextBox);
 
 		if (image != null) {
-			#if !html5
 			var fullImagePath:String = '${Path.normalize(Sys.getCwd())}/${Paths.image(image)}'.replace('/', '\\');
 			var noExt = Path.withoutExtension(fullImagePath);
 			if (FileSystem.exists('$noExt\\spritemap1.png'))
@@ -74,7 +67,6 @@ class UIImageExplorer extends UIFileExplorer {
 	
 			if (FileSystem.exists(fullImagePath))
 				loadFile(fullImagePath);
-			#end
 		}
 
 		allowDirectories = CoolUtil.isMapEmpty(imageFiles); __firstLoad = false;
@@ -97,10 +89,6 @@ class UIImageExplorer extends UIFileExplorer {
 
 	@:noCompletion var __firstLoad:Bool = true;
 	public function uploadImage(filePath:String, file:Bytes) {
-		#if html5
-		return;
-		#end
-		#if !html5
 		__resetData();
 
 		var imagePath:Dynamic = Path.normalize(filePath);
@@ -305,7 +293,6 @@ class UIImageExplorer extends UIFileExplorer {
 		if (directoryButton.visible) fileText.fieldWidth -= directoryButton.bWidth + 12;
 
 		members.push(directoryBG); __firstLoad = false;
-		#end
 	}
 
 	public var saveData:ImageSaveData = null;
@@ -333,17 +320,13 @@ class UIImageExplorer extends UIFileExplorer {
 		if (imageData.isAtlas) directory += '/${imageData.imageName}';
 
 		var alreadlyExistingFiles:Array<String> = [];
-		#if !html5
 		for (name => file in imageData.imageFiles)
 			if (FileSystem.exists('$directory/$name'))
 				alreadlyExistingFiles.push('$directory/$name');
-		#end
 
 		function deleteExistingFiles() {
-			#if !html5
 			for (file in alreadlyExistingFiles)
 				FileSystem.deleteFile(file);
-			#end
 			alreadlyExistingFiles = [];
 		}
 

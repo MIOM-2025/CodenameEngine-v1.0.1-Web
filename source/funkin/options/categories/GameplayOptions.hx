@@ -8,10 +8,9 @@ class GameplayOptions extends TreeMenuScreen {
 	var offsetSetting:NumOption;
 
 	public function new() {
-		super('optionsTree.gameplay-name', 'optionsTree.gameplay-desc', 'GameplayOptions.', ['LEFT_FULL', 'A_B']);
+		super('optionsTree.gameplay-name', 'optionsTree.gameplay-desc', 'GameplayOptions.');
 
 		add(new Checkbox(getNameID('downscroll'), getDescID('downscroll'), 'downscroll'));
-		add(new Checkbox(getNameID('middleScroll'), getDescID('middleScroll'), 'middleScroll'));
 		add(new Checkbox(getNameID('ghostTapping'), getDescID('ghostTapping'), 'ghostTapping'));
 		add(new Checkbox(getNameID('naughtyness'), getDescID('naughtyness'), 'naughtyness'));
 		add(new Checkbox(getNameID('camZoomOnBeat'), getDescID('camZoomOnBeat'), 'camZoomOnBeat'));

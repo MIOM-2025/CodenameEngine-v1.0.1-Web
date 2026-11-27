@@ -4,9 +4,6 @@ package funkin.backend.system;
 import sys.FileSystem;
 #end
 import flixel.FlxState;
-#if mobile
-import mobile.funkin.backend.system.CopyState;
-#end
 import funkin.backend.assets.AssetsLibraryList;
 import funkin.backend.assets.ModsFolder;
 import funkin.backend.assets.ModsFolderLibrary;
@@ -29,35 +26,14 @@ class MainState extends FlxState {
 	public static var initiated:Bool = false;
 	public override function create() {
 		super.create();
-		#if mobile
-		funkin.backend.system.Main.framerateSprite.setScale();
-		#end
-		if (!initiated)
-		{
+		if (!initiated) {
 			Main.loadGameSettings();
-			#if mobile
-			if (!CopyState.checkExistingFiles())
-			{
-				FlxG.switchState(new CopyState());
-				return;
-			}
-			#end
-		}
-		else
-		{
-			#if TOUCH_CONTROLS
-			mobile.funkin.backend.utils.MobileData.clearTouchPadData();
-			#end
 		}
 
 		initiated = true;
 
-		#if TOUCH_CONTROLS
-		mobile.funkin.backend.utils.MobileData.init();
-		#end
-
 		#if sys
-		CoolUtil.deleteFolder('.temp/'); // delete temp folder
+		CoolUtil.deleteFolder('./.temp/'); // delete temp folder
 		#end
 		Options.save();
 
@@ -148,10 +124,8 @@ class MainState extends FlxState {
 			Framerate.instance.reload();
 
 		#if sys
-		CoolUtil.safeAddAttributes('.temp/', NativeAPI.FileAttribute.HIDDEN);
+		CoolUtil.safeAddAttributes('./.temp/', NativeAPI.FileAttribute.HIDDEN);
 		#end
-
-		FlxG.game.soundTray.reloadText(true);
 
 		var startState:Class<FlxState> = Flags.DISABLE_WARNING_SCREEN ? TitleState : funkin.menus.WarningState;
 

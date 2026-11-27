@@ -55,9 +55,6 @@ using StringTools;
  * Various utilities, that have no specific Util class.
 **/
 @:allow(funkin.game.PlayState)
-#if cpp
-@:cppFileCode('#include <thread>')
-#end
 final class CoolUtil
 {
 	/**
@@ -455,34 +452,12 @@ final class CoolUtil
 	 * Plays the main menu theme.
 	 * @param fadeIn
 	 */
-	#if web
-	public static var __webAudioUnlocked:Bool = false;
-	public static var __webAudioWaiting:Bool = false;
-	#end
-
 	@:noUsing public static function playMenuSong(fadeIn:Bool = false) {
-		#if web
-		// Try to play right away. If the browser blocks autoplay, the catch below
-		// registers a one-shot gesture listener as a fallback.
-		if (!__webAudioUnlocked) {
-			__webAudioUnlocked = true;
-			if (!__webAudioWaiting) {
-				__webAudioWaiting = true;
-				try {
-					js.Browser.document.addEventListener('pointerdown', function() {
-						try { if (FlxG.sound.music == null || !FlxG.sound.music.playing) playMenuSong(fadeIn); } catch (e:Dynamic) {}
-					}, {once: true});
-				} catch (e:Dynamic) {}
-			}
-		}
-		#end
 		if (FlxG.sound.music == null || !FlxG.sound.music.playing)
 		{
-			try {
-				playMusic(Paths.music(Flags.DEFAULT_MENU_MUSIC), true, fadeIn ? 0 : 1, true, 102);
-				if (fadeIn)
-					FlxG.sound.music.fadeIn(4, 0, 0.7);
-			} catch (e:Dynamic) { trace('menu music failed'); }
+			playMusic(Paths.music(Flags.DEFAULT_MENU_MUSIC), true, fadeIn ? 0 : 1, true, 102);
+			if (fadeIn)
+				FlxG.sound.music.fadeIn(4, 0, 0.7);
 		}
 	}
 
@@ -567,28 +542,10 @@ final class CoolUtil
 	 * @param path
 	 * @return Array<String>
 	 */
-	@:noUsing public static function getTextSafe(path:String):String
-	{
-		var text:String = Assets.getText(path);
-		#if web
-		if (text == null) {
-			try {
-				var xhr = new js.html.XMLHttpRequest();
-				xhr.open('GET', path, false);
-				xhr.send();
-				if (xhr.status == 200 || xhr.status == 0) text = xhr.responseText;
-			} catch (e:Dynamic) {}
-		}
-		#end
-		return text;
-	}
-
 	@:noUsing public static function coolTextFile(path:String):Array<String>
 	{
-		var raw:String = getTextSafe(path);
-		if (raw == null) return [];
 		var trim:String;
-		return [for(line in raw.split("\n")) if ((trim = line.trim()) != "" && !trim.startsWith("#")) trim];
+		return [for(line in Assets.getText(path).split("\n")) if ((trim = line.trim()) != "" && !trim.startsWith("#")) trim];
 	}
 
 	/**
@@ -1261,11 +1218,9 @@ final class CoolUtil
 	 * @return Bool 
 	 */
 	public static function imageHasFrameData(path:String):String {
-		#if sys
 		if (FileSystem.exists(Path.withExtension(path, "xml"))) return "xml";
 		if (FileSystem.exists(Path.withExtension(path, "txt"))) return "txt";
 		if (FileSystem.exists(Path.withExtension(path, "json"))) return "json";
-		#end
 
 		return null;
 	}
@@ -1479,16 +1434,6 @@ final class CoolUtil
 		var fromProperty = CoolUtil.parseProperty(fromTarget, fields);
 
 		return toProperty.setValue(fromProperty.getValue());
-	}
-	
-	#if cpp
-	@:functionCode('
-		return std::thread::hardware_concurrency();
-	')
-	#end
-	public static function getCPUThreadsCount():Int
-	{
-		return 1;
 	}
 }
 

@@ -9,15 +9,9 @@ import openfl.events.ProgressEvent;
 import openfl.net.URLLoader;
 import openfl.net.URLRequest;
 import openfl.utils.ByteArray;
-	#if sys
 import sys.FileSystem;
-	#end
-	#if sys
 import sys.io.File;
-	#end
-	#if sys
 import sys.io.FileOutput;
-	#end
 
 class AsyncUpdater {
 	// NON ASYNC STUFF
@@ -43,10 +37,6 @@ class AsyncUpdater {
 	#if mac
 	public static var executableGitHubName:String = "update-mac";
 	public static var executableName:String = "CodenameEngine";
-	#end
-	#if mobile
-	public static var executableGitHubName:String = "";
-	public static var executableName:String = "";
 	#end
 
 	public var releases:Array<GitHubRelease>;

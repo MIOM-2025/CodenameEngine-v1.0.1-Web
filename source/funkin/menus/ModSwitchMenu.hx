@@ -5,9 +5,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import funkin.backend.assets.ModsFolder;
 import haxe.io.Path;
-	#if sys
 import sys.FileSystem;
-	#end
 
 class ModSwitchMenu extends MusicBeatSubstate {
 	var mods:Array<String> = [];
@@ -45,9 +43,6 @@ class ModSwitchMenu extends MusicBeatSubstate {
 		}
 		add(alphabets);
 		changeSelection(0, true);
-		
-		addTouchPad('UP_DOWN', 'A_B');
-		addTouchPadCamera();
 	}
 
 	public override function update(elapsed:Float) {

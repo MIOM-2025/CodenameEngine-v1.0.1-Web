@@ -1,11 +1,7 @@
 package funkin.backend.system;
 
-	#if sys
 import sys.io.File;
-	#end
-	#if sys
 import sys.FileSystem;
-	#end
 import flixel.addons.transition.FlxTransitionSprite.GraphicTransTileDiamond;
 import flixel.addons.transition.FlxTransitionableState;
 import flixel.addons.transition.TransitionData;
@@ -15,7 +11,6 @@ import flixel.math.FlxRect;
 import flixel.system.ui.FlxSoundTray;
 import funkin.backend.assets.AssetsLibraryList;
 import funkin.backend.assets.ModsFolder;
-import funkin.backend.system.framerate.Framerate;
 import funkin.backend.assets.AssetSource;
 import funkin.backend.system.framerate.SystemInfo;
 import funkin.backend.system.modules.*;
@@ -25,24 +20,28 @@ import openfl.Lib;
 import openfl.display.Sprite;
 import openfl.text.TextFormat;
 import openfl.utils.AssetLibrary;
-import lime.system.System as LimeSystem;
 
 #if ALLOW_MULTITHREADING
 import sys.thread.Thread;
+#end
+#if android
+import android.content.Context;
+import android.os.Build;
 #end
 
 class Main extends Sprite
 {
 	public static var instance:Main;
 
-	public static var modToLoad:String = #if web "" #else "dustin" #end;
-	public static var forceGPUOnlyBitmapsOff:Bool = #if (desktop || mobile) false #else true #end;
+	public static var modToLoad:String = null;
+	public static var forceGPUOnlyBitmapsOff:Bool = #if desktop false #else true #end;
 	public static var noTerminalColor:Bool = false;
 	public static var verbose:Bool = false;
 
 	public static var scaleMode:FunkinRatioScaleMode;
-	
-	public static var framerateSprite:Framerate;
+	#if !mobile
+	public static var framerateSprite:funkin.backend.system.framerate.Framerate;
+	#end
 
 	var gameWidth:Int = 1280; // Width of the game in pixels (might be less / more in actual pixels).
 	var gameHeight:Int = 720; // Height of the game in pixels (might be less / more in actual pixels).
@@ -65,9 +64,7 @@ class Main extends Sprite
 
 	public static function preInit() {
 		funkin.backend.utils.NativeAPI.registerAsDPICompatible();
-		#if !html5
 		funkin.backend.system.CommandLineHandler.parseCommandLine(Sys.args());
-		#end
 		funkin.backend.system.Main.fixWorkingDirectory();
 	}
 
@@ -77,63 +74,14 @@ class Main extends Sprite
 
 		instance = this;
 
-		#if mobile
-		#if android
-		StorageUtil.requestPermissions();
-		#end
-		Sys.setCwd(StorageUtil.getStorageDirectory());
-		#end
-
 		CrashHandler.init();
-
-		framerateSprite = new Framerate();
 
 		addChild(game = new FunkinGame(gameWidth, gameHeight, MainState, Options.framerate, Options.framerate, skipSplash, startFullscreen));
 
-		#if web
-		try {
-			var __sample:Int->Void = null;
-			__sample = function(__n:Int) {
-				try {
-					var __c = FlxG.stage.window.context;
-					var __bd = openfl.utils.Assets.getBitmapData('assets/images/menus/titlescreen/logo.png');
-					var __msg = 'ctx=' + (__c == null ? 'NULL' : Std.string(__c.type))
-						+ ' bd=' + (__bd == null ? 'null' : (__bd.width + 'x' + __bd.height))
-						+ ' tile=' + FlxG.renderTile + ' blit=' + FlxG.renderBlit;
-					var __doc = js.Browser.document;
-					var __div = __doc.getElementById('cne-diag');
-					if (__div == null) {
-						__div = __doc.createElement('div');
-						__div.id = 'cne-diag';
-						__div.style.cssText = 'position:fixed;top:0;left:0;z-index:999999;background:#000;color:#0f0;font:12px monospace;padding:2px 4px;pointer-events:none';
-						__doc.body.appendChild(__div);
-					}
-					__div.innerText = __msg;
-					try {
-						var __txt = openfl.utils.Assets.getText('assets/data/languages/en.xml');
-						var __rep = __msg
-							+ ';img=' + (__bd == null ? 'null' : Std.string(__bd.image != null))
-							+ ';txt=' + (__txt == null ? 'null' : Std.string(__txt.length))
-							+ ';rm=' + Std.string(FlxG.renderMethod);
-						js.Browser.window.fetch('/__diag?n=' + __n + '&m=' + StringTools.urlEncode(__rep));
-					} catch (e:Dynamic) {}
-				} catch (e:Dynamic) {}
-				if (__n < 3) haxe.Timer.delay(function() __sample(__n + 1), 7000);
-			};
-			haxe.Timer.delay(function() __sample(0), 5000);
-		} catch (e:Dynamic) {}
-		#end
-
-
-		#if android FlxG.android.preventDefaultKeys = [BACK]; #end
-
-		#if !web
-		#if mobile
-		FlxG.stage.window.onResize.add((w:Int, h:Int) -> framerateSprite.setScale());
-		#end
+		#if (!mobile && !web)
+		addChild(framerateSprite = new funkin.backend.system.framerate.Framerate());
 		SystemInfo.init();
 		#end
-		addChild(framerateSprite);
 	}
 
 	@:dox(hide)
@@ -195,9 +143,9 @@ class Main extends Sprite
 		lib.__proxy = Paths.assetsTree;
 
 		#if web
-		// Web: openfl already parsed the manifest and registered the real library as
-		// "default". Assets.registerLibrary would unload it (wiping the manifest data),
-		// so swap the pointer by hand and hand the real library to the asset tree.
+		// openfl already parsed the manifest into a real library registered as
+		// "default". Assets.registerLibrary would unload it and wipe every entry,
+		// so swap the pointer by hand and hand the real library to the tree.
 		var __map = @:privateAccess lime.utils.Assets.libraries;
 		var __realLib:Dynamic = __map.get('default');
 		if (__realLib != null && __realLib != lib) {
@@ -225,24 +173,20 @@ class Main extends Sprite
 		FlxG.signals.preStateSwitch.add(onStateSwitch);
 		FlxG.signals.postStateSwitch.add(onStateSwitchPost);
 
-		FlxG.mouse.useSystemCursor = !Controls.instance.touchC;
+		FlxG.mouse.useSystemCursor = true;
 		#if DARK_MODE_WINDOW
 		if(funkin.backend.utils.NativeAPI.hasVersion("Windows 10")) funkin.backend.utils.NativeAPI.redrawWindowHeader();
 		#end
 
 		ModsFolder.init();
 		#if MOD_SUPPORT
-		if (FileSystem.exists(#if mobile StorageUtil.getStorageDirectory(true) + #end "mods/autoload.txt"))
-			modToLoad = File.getContent(#if mobile StorageUtil.getStorageDirectory(true) + #end "mods/autoload.txt").trim();
+		if (FileSystem.exists("mods/autoload.txt"))
+			modToLoad = File.getContent("mods/autoload.txt").trim();
 
 		ModsFolder.switchMod(modToLoad.getDefault(Options.lastLoadedMod));
 		#end
 
 		initTransition();
-		
-		#if mobile
-		LimeSystem.allowScreenTimeout = Options.screenTimeOut;
-		#end
 	}
 
 	public static function refreshAssets() @:privateAccess {
@@ -305,7 +249,9 @@ class Main extends Sprite
 		if (!noCwdFix && !sys.FileSystem.exists('manifest/default.json')) {
 			Sys.setCwd(haxe.io.Path.directory(Sys.programPath()));
 		}
-		#elseif switch
+		#elseif android
+		Sys.setCwd(haxe.io.Path.addTrailingSlash(VERSION.SDK_INT > 30 ? Context.getObbDir() : Context.getExternalFilesDir()));
+		#elseif (ios || switch)
 		Sys.setCwd(haxe.io.Path.addTrailingSlash(openfl.filesystem.File.applicationStorageDirectory.nativePath));
 		#end
 	}

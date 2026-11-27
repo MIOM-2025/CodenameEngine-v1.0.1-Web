@@ -14,9 +14,7 @@ import Sys;
 import hxdiscord_rpc.Discord;
 import hxdiscord_rpc.Types;
 import lime.app.Application;
-	#if sys
 import sys.thread.Thread;
-	#end
 #end
 
 final class DiscordUtil

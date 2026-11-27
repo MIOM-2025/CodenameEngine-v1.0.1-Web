@@ -2,7 +2,7 @@ package funkin.options.categories;
 
 class AppearanceOptions extends TreeMenuScreen {
 	public function new() {
-		super('optionsTree.appearance-name', 'optionsTree.appearance-desc', 'AppearanceOptions.', ['LEFT_FULL', 'A_B']);
+		super('optionsTree.appearance-name', 'optionsTree.appearance-desc', 'AppearanceOptions.');
 
 		add(new NumOption(getNameID('framerate'), getDescID('framerate'),
 			30, 240, 1,

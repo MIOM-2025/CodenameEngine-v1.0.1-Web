@@ -50,10 +50,6 @@ class PlayState extends MusicBeatState
 	 */
 	public static var SONG:ChartData;
 	/**
-	 * qqqeb want to kill you.
-	 */
-	public static var qqqeb:Bool = false;
-	/**
 	 * Whenever the song is being played in Story Mode.
 	 */
 	public static var isStoryMode:Bool = false;
@@ -648,8 +644,6 @@ class PlayState extends MusicBeatState
 
 	@:dox(hide) override public function create()
 	{
-		#if mobile lime.system.System.allowScreenTimeout = false; #end
-		
 		Note.__customNoteTypeExists = [];
 
 		// SCRIPTING & DATA INITIALIZATION
@@ -779,7 +773,6 @@ class PlayState extends MusicBeatState
 			}
 
 			var strOffset:Float = strumLine.strumLinePos != null ? strumLine.strumLinePos : (strumLine.type == 1 ? 0.75 : 0.25);
-			if (Options.middleScroll && SONG.meta.name != "genocides") strOffset = 0.5;
 			var strScale:Float = strumLine.strumScale != null ? strumLine.strumScale : 1;
 			var strSpacing:Float = strumLine.strumSpacing == null ? 1 : strumLine.strumSpacing;
 			var keyCount:Int = strumLine.keyCount == null ? 4 : strumLine.keyCount;
@@ -803,8 +796,6 @@ class PlayState extends MusicBeatState
 		}
 
 		add(strumLines);
-		
-		if (Options.middleScroll && SONG.meta.name != "genocides") cpuStrums.visible = false;
 
 		splashHandler = new SplashHandler();
 		add(splashHandler);
@@ -885,15 +876,6 @@ class PlayState extends MusicBeatState
 
 		startingSong = true;
 
-		#if TOUCH_CONTROLS
-		addMobileControls();
-		#if !android
-		addTouchPad('NONE', 'P');
-		addTouchPadCamera();
-		#end
-		mobileControls.instance.visible = false;
-		#end
-		
 		super.create();
 
 		for(s in introSprites)
@@ -997,9 +979,6 @@ class PlayState extends MusicBeatState
 			if (gameAndCharsEvent("onStartCountdown", new CancellableEvent()).cancelled) return;
 		}
 
-		#if TOUCH_CONTROLS
-		if (mobileControls.instance != null) mobileControls.instance.visible = true;
-		#end
 		startedCountdown = true;
 		Conductor.songPosition = 0;
 		Conductor.songPosition -= Conductor.crochet * introLength - Conductor.songOffset;
@@ -1082,7 +1061,6 @@ class PlayState extends MusicBeatState
 
 	public override function destroy() {
 		scripts.call("destroy");
-		#if mobile lime.system.System.allowScreenTimeout = Options.screenTimeOut; #end
 		for(g in __cachedGraphics)
 			g.useCount--;
 		@:privateAccess {
@@ -1098,8 +1076,6 @@ class PlayState extends MusicBeatState
 		SaveWarning.reset();
 
 		instance = null;
-		
-		qqqeb = false;
 
 		Note.__customNoteTypeExists = [];
 	}
@@ -1175,8 +1151,6 @@ class PlayState extends MusicBeatState
 	override function openSubState(SubState:FlxSubState)
 	{
 		var event = gameAndCharsEvent("onSubstateOpen", EventManager.get(StateEvent).recycle(SubState));
-		
-		#if mobile lime.system.System.allowScreenTimeout = Options.screenTimeOut; #end
 
 		if (!postCreated)
 			MusicBeatState.skipTransIn = true;
@@ -1203,7 +1177,6 @@ class PlayState extends MusicBeatState
 	override function closeSubState()
 	{
 		var event = gameAndCharsEvent("onSubstateClose", EventManager.get(StateEvent).recycle(subState));
-		#if mobile lime.system.System.allowScreenTimeout = false; #end
 		if (event.cancelled) return;
 
 		if (paused)
@@ -1434,7 +1407,7 @@ class PlayState extends MusicBeatState
 		while(events.length > 0 && events.last().time <= Conductor.songPosition)
 			executeEvent(events.pop());
 
-		if ((#if android FlxG.android.justReleased.BACK || #end controls.PAUSE) && startedCountdown && canPause)
+		if (controls.PAUSE && startedCountdown && canPause)
 			pauseGame();
 
 		if (generatedMusic)
@@ -1725,9 +1698,6 @@ class PlayState extends MusicBeatState
 		if (gameAndCharsEvent("onSongEnd", new CancellableEvent()).cancelled) return;
 		endingSong = true;
 		canPause = false;
-		#if TOUCH_CONTROLS
-		if (mobileControls.instance != null) mobileControls.instance.visible = false;
-		#end
 
 		for (strumLine in strumLines.members) strumLine.vocals.stop();
 		inst.stop();
@@ -1761,9 +1731,6 @@ class PlayState extends MusicBeatState
 	 * Immediately switches to the next song, or goes back to the Story/Freeplay menu.
 	 */
 	public function nextSong() {
-		#if TOUCH_CONTROLS
-		if (mobileControls.instance != null) mobileControls.instance.visible = false;
-		#end
 		if (isStoryMode) {
 			campaignScore += songScore;
 			campaignMisses += misses;
@@ -2220,31 +2187,6 @@ class PlayState extends MusicBeatState
 
 		SONG = Chart.parse(_name, _difficulty, _variation);
 		fromMods = SONG.fromMods;
-	}
-	
-	/**
-	 * 设置四个按键的颜色.
-	**/
-	public function setMobileControlsColor(a:Int, b:Int, c:Int, d:Int)
-	{
-	    if (mobileControls.instance != null)
-	    {
-    	    mobileControls.buttonLeft.color = a;
-            mobileControls.buttonDown.color = b;
-            mobileControls.buttonUp.color = c;
-            mobileControls.buttonRight.color = d;
-        }
-	}
-	
-	/**
-	 * 是否启用空格键.
-	**/
-	public function enableSpaceBar(?fnfpwp:Bool = false)
-	{
-	    qqqeb = fnfpwp;
-	    removeMobileControls();
-	    addMobileControls();
-	    mobileControls.instance.visible = true;
 	}
 }
 
