@@ -207,6 +207,21 @@ class AudioBuffer
 		return null;
 	}
 
+	#if (js && html5)
+	/**
+		Music is streamed through an <audio> element instead of being decoded into
+		an AudioBuffer. A full song otherwise costs tens of megabytes of PCM and
+		stays resident for the whole session; sound effects keep the WebAudio path
+		so that the same effect can still play several times at once.
+	**/
+	@:noCompletion public static function __cneIsMusicPath(path:String):Bool
+	{
+		if (path == null) return false;
+		var p = path.toLowerCase();
+		return p.indexOf("music/") >= 0;
+	}
+	#end
+
 	/**
 		Creates an `AudioBuffer` from a file.
 
@@ -223,7 +238,7 @@ class AudioBuffer
 		#if force_html5_audio
 		audioBuffer.__srcHowl = new Howl({src: [path], html5: true, preload: false});
 		#else
-		audioBuffer.__srcHowl = new Howl({src: [path], html5: howlHtml5, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: [path], html5: howlHtml5 || __cneIsMusicPath(path), preload: false});
 		#end
 
 		return audioBuffer;
@@ -282,7 +297,8 @@ class AudioBuffer
 		#if force_html5_audio
 		audioBuffer.__srcHowl = new Howl({src: paths, html5: true, preload: false});
 		#else
-		audioBuffer.__srcHowl = new Howl({src: paths, html5: howlHtml5, preload: false});
+		var __stream = howlHtml5 || (paths.length > 0 && __cneIsMusicPath(paths[0]));
+		audioBuffer.__srcHowl = new Howl({src: paths, html5: __stream, preload: false});
 		#end
 
 		return audioBuffer;
