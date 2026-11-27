@@ -12,7 +12,9 @@ import funkin.options.Options;
 import funkin.game.PlayState;
 import funkin.backend.scripting.EventManager;
 
+#if mobile
 import mobile.funkin.backend.utils.StorageUtil;
+#end
 
 import openfl.utils.Assets;
 
