@@ -1,5 +1,9 @@
 package funkin.backend.system.updating;
 
+#if !sys
+import funkin.backend.utils.stubs.Sys;
+#end
+
 import flixel.math.FlxRect;
 import flixel.sound.FlxSound;
 import flixel.ui.FlxBar;

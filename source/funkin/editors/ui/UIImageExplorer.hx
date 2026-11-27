@@ -1,5 +1,9 @@
 package funkin.editors.ui;
 
+#if !sys
+import funkin.backend.utils.stubs.Sys;
+#end
+
 import flixel.util.typeLimit.OneOfTwo;
 import flixel.text.FlxText.FlxTextFormat;
 import flixel.text.FlxText.FlxTextFormatMarkerPair;

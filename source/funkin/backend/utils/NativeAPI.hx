@@ -1,5 +1,9 @@
 package funkin.backend.utils;
 
+#if !sys
+import funkin.backend.utils.stubs.Sys;
+#end
+
 import haxe.macro.Expr.Case;
 import openfl.ui.Mouse;
 import openfl.ui.MouseCursor;

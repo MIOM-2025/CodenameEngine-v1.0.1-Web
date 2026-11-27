@@ -1,5 +1,9 @@
 package haxe;
 
+#if !sys
+import funkin.backend.utils.stubs.Sys;
+#end
+
 #if !lime_cffi
 // Original haxe.Timer class
 

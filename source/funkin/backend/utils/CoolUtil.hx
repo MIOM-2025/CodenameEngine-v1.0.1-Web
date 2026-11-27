@@ -1,5 +1,9 @@
 package funkin.backend.utils;
 
+#if !sys
+import funkin.backend.utils.stubs.Sys;
+#end
+
 #if cpp
 import cpp.Float64;
 #end

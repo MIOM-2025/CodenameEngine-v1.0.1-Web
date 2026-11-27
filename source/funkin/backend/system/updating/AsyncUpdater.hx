@@ -1,5 +1,9 @@
 package funkin.backend.system.updating;
 
+#if !sys
+import funkin.backend.utils.stubs.Sys;
+#end
+
 import funkin.backend.system.github.GitHubRelease;
 import funkin.backend.utils.ZipUtil;
 import haxe.io.Path;

@@ -373,7 +373,7 @@ class SongCreationScreen extends UISubstateWindow {
 					var files:Map<String, Any> = [];
 					for (field in new ZipReader(new BytesInput(importChartFile.file)).read()) {
 						var fileName = field.fileName;
-						var fileContent = ZipUtil.unzip(field);
+						var fileContent = #if sys ZipUtil.unzip(field) #else null #end;
 						files.set(fileName, fileContent);
 					}
 					saveFromVSlice(files);
