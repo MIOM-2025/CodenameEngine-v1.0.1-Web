@@ -1079,7 +1079,6 @@ class PlayState extends MusicBeatState
 				]) {
 					if (key == null) continue;
 					lime.utils.Assets.cache.audio.remove(key);
-					openfl.utils.Assets.cache.sound.remove(key);
 				}
 			}
 		}
