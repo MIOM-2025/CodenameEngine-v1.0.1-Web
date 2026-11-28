@@ -279,21 +279,19 @@ final class TranslationUtil
 			parseXml(langNode, prefix);
 		}
 		#else
-		// Mod support is off on web, so the bundled language files are read
-		// straight from the asset tree instead of through a mod library.
-		for(file in Paths.assetsTree.getFiles("assets/" + mainPath).sortAlphabetically()) {
-			if(Path.extension(file).toLowerCase() != "xml") continue;
+		// Mods cannot exist in a browser, so the loop above is compiled out. Read the
+		// language files that ship with the game by name instead of asking the asset
+		// tree to enumerate them.
+		for(name in ["Main.xml", "Options.xml", "Editors.xml"]) {
+			var full:String = 'assets/$mainPath/$name';
+			if (!Assets.exists(full)) continue;
 
-			var full:String = 'assets/$mainPath/$file';
 			var xml:Access = null;
 			try xml = new Access(Xml.parse(Assets.getText(full)))
-			catch(e) Logs.error('Error while parsing $file: ${Std.string(e)}', "Language");
+			catch(e) Logs.error('Error while parsing $name: ${Std.string(e)}', "Language");
 
 			if (xml == null) continue;
-			if (!xml.hasNode.language) {
-				Logs.warn('File $file requires a <language> root element.', "Language");
-				continue;
-			}
+			if (!xml.hasNode.language) continue;
 
 			var langNode = xml.node.language;
 			parseXml(langNode, langNode.getAtt("prefix").getDefault(""));
