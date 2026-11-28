@@ -134,8 +134,7 @@ jobs:
 
       - name: Clear web asset preload flags
         run: |
-          # inline manifest left untouched: the engine preloads the whole library,
-          # which is upstream behaviour and what the loading screen expects
+          python3 .github/scripts/fix_inline_manifest.py export/release/html5/bin/CodenameEngine.js
 
       - name: Show output
         if: always()
