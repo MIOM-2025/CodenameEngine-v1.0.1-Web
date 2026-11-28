@@ -114,6 +114,12 @@ final class MemoryUtil {
 		return Gc.stats().currentMemory;
 		#elseif sys
 		return cast(cast(System.totalMemory, UInt), Float);
+		#elseif js
+		// Browsers only expose the JS heap; GPU textures and decoded audio live
+		// outside it, so treat this as a trend indicator rather than the total.
+		var perf:Dynamic = js.Syntax.code("performance");
+		if (perf != null && perf.memory != null) return cast perf.memory.usedJSHeapSize;
+		return 0;
 		#else
 		return 0;
 		#end
