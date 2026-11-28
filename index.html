@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	
+	<meta charset="utf-8">
+	
+	<title>Friday Night Funkin' - Codename Engine</title>
+	
+	<meta id="viewport" name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	
+	
+	<link rel="shortcut icon" type="image/png" href="./favicon.png">
+	
+	
+	<script type="text/javascript" src="./CodenameEngine.js?v=63e6332"></script>
+	
+	<script>
+		window.addEventListener ("touchmove", function (event) { event.preventDefault (); }, { capture: false, passive: false });
+		if (typeof window.devicePixelRatio != 'undefined' && window.devicePixelRatio > 2) {
+			var meta = document.getElementById ("viewport");
+			meta.setAttribute ('content', 'width=device-width, initial-scale=' + (2 / window.devicePixelRatio) + ', user-scalable=no');
+		}
+	</script>
+	
+	<style>
+		html,body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+		#openfl-content { background: #000000; width: 100%; height: 100%; }
+		@font-face {
+			font-family: 'Nokia Cellphone FC Small';
+			src: url('flixel/fonts/nokiafc22.ttf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+		}
+		@font-face {
+			font-family: 'Monsterrat';
+			src: url('flixel/fonts/monsterrat.ttf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+		}
+		@font-face {
+			font-family: 'VCR OSD Mono';
+			src: url('assets/fonts/vcr.ttf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+		}
+		@font-face {
+			font-family: 'Mars Needs Cunnilingus';
+			src: url('assets/fonts/DTM-Mono.ttf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+		}
+		@font-face {
+			font-family: 'StatusPlz Regular';
+			src: url('assets/fonts/StatusPlz.ttf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+		}
+		@font-face {
+			font-family: 'Pixel Arial 11 Bold';
+			src: url('assets/fonts/pixel.otf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+		}
+
+	</style>
+	
+</head>
+<body>
+	
+	<noscript>This webpage makes extensive use of JavaScript. Please enable JavaScript in your web browser to view this page.</noscript>
+	
+	<div id="openfl-content"></div>
+	
+	<script type="text/javascript">
+		lime.embed ("CodenameEngine", "openfl-content", 1280, 720, { parameters: {} });
+	</script>
+	
+<div id="cne-pad">
+  <div class="cne-pad-group cne-pad-dpad">
+    <button class="cne-btn" data-key="38" aria-label="up">&#9650;</button>
+    <div class="cne-row">
+      <button class="cne-btn" data-key="37" aria-label="left">&#9664;</button>
+      <button class="cne-btn" data-key="40" aria-label="down">&#9660;</button>
+      <button class="cne-btn" data-key="39" aria-label="right">&#9654;</button>
+    </div>
+  </div>
+  <div class="cne-pad-group cne-pad-actions">
+    <button class="cne-btn cne-btn-ok" data-key="13">确定</button>
+    <button class="cne-btn cne-btn-back" data-key="27">返回</button>
+  </div>
+</div>
+<style>
+#cne-pad{position:fixed;inset:auto 0 0 0;display:none;justify-content:space-between;
+  align-items:flex-end;padding:0 14px 18px;box-sizing:border-box;z-index:99999;
+  pointer-events:none;font-family:system-ui,sans-serif;
+  padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));}
+.cne-pad-group{display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.cne-row{display:flex;gap:8px;}
+.cne-btn{pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,.5);
+  background:rgba(20,20,28,.45);color:#fff;font-size:20px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.cne-btn:active,.cne-btn.cne-active{background:rgba(120,170,255,.6);border-color:#fff;transform:scale(.94);}
+.cne-btn-ok,.cne-btn-back{width:70px;height:70px;font-size:16px;}
+.cne-btn-ok{background:rgba(60,160,80,.5);}
+.cne-btn-back{background:rgba(180,60,60,.5);}
+@media (pointer:coarse){#cne-pad{display:flex;}}
+</style>
+<script>
+(function () {
+  if (!('ontouchstart' in window) && !(navigator.maxTouchPoints > 0)) return;
+  var pad = document.getElementById('cne-pad');
+  if (!pad) return;
+
+  function fire(type, code) {
+    var ev;
+    try { ev = new KeyboardEvent(type, {bubbles: true, cancelable: true}); }
+    catch (e) { ev = new Event(type, {bubbles: true, cancelable: true}); }
+    try { Object.defineProperty(ev, 'keyCode', {get: function () { return code; }}); }
+    catch (e) { ev.keyCode = code; }
+    try { Object.defineProperty(ev, 'which', {get: function () { return code; }}); }
+    catch (e) { ev.which = code; }
+    try { ev.key = ''; } catch (e) {}
+    window.dispatchEvent(ev);
+    var active = document.activeElement;
+    if (active && active !== document.body && active.dispatchEvent) active.dispatchEvent(ev);
+  }
+
+  var held = {};
+  function press(el) {
+    var code = parseInt(el.getAttribute('data-key'), 10);
+    if (held[code]) return;
+    held[code] = true;
+    el.classList.add('cne-active');
+    fire('keydown', code);
+  }
+  function release(el) {
+    var code = parseInt(el.getAttribute('data-key'), 10);
+    if (!held[code]) return;
+    held[code] = false;
+    el.classList.remove('cne-active');
+    // Flixel samples key state on frame boundaries, and a tap is shorter than a
+    // frame, so the engine would never see justPressed. Hold the key down a bit.
+    setTimeout(function () { fire('keyup', code); }, 90);
+  }
+
+  Array.prototype.forEach.call(pad.querySelectorAll('.cne-btn'), function (el) {
+    el.addEventListener('touchstart', function (e) { e.preventDefault(); press(el); }, {passive: false});
+    el.addEventListener('touchend', function (e) { e.preventDefault(); release(el); }, {passive: false});
+    el.addEventListener('touchcancel', function (e) { e.preventDefault(); release(el); }, {passive: false});
+    el.addEventListener('mousedown', function (e) { e.preventDefault(); press(el); });
+    el.addEventListener('mouseup', function (e) { e.preventDefault(); release(el); });
+    el.addEventListener('mouseleave', function () { release(el); });
+  });
+})();
+</script>
+
+</body>
+</html>
