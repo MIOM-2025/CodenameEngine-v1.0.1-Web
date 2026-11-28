@@ -141,7 +141,15 @@ class MainState extends FlxState {
 			}
 		}
 
+		#if web
+		// nothing is preloaded in the manifest, so the menus are fetched here and the
+		// loading state keeps the page waiting until the bar is full
+		FlxG.switchState(new funkin.menus.WebLoadingState(
+			["fonts/", "data/", "languages/", "shaders/", "images/menus/", "images/icons/", "images/credits/", "sounds/", "music/"],
+			function() return cast Type.createInstance(startState, [])));
+		#else
 		FlxG.switchState(cast Type.createInstance(startState, []));
+		#end
 	}
 
 }

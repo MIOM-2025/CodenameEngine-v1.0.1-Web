@@ -284,12 +284,21 @@ class StoryMenuState extends MusicBeatState {
 		if (characterSprites != null)
 			characterSprites.forEachAlive(function(spr) spr.playAnim("confirm", true, LOCK));
 
+		#if web
+		FlxG.switchState(new funkin.menus.WebLoadingState(
+			["images/characters/", "images/stages/", "images/game/", "songs/"],
+			function() {
+				PlayState.loadWeek(event.week, event.difficulty);
+				return new PlayState();
+			}));
+		#else
 		PlayState.loadWeek(event.week, event.difficulty);
 
 		new FlxTimer().start(1, function(tmr:FlxTimer)
 		{
 			FlxG.switchState(new PlayState());
 		});
+		#end
 		weekSprites.members[event.weekID].startFlashing();
 	}
 }
