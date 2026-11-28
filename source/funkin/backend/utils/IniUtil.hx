@@ -11,6 +11,7 @@ class IniUtil {
 	}
 
 	public static function parseStringToMap(map:Map<String, Map<String, String>>, data:String) {
+		if (data == null) return;
 		var section:Map<String, String> = null;
 
 		var regexSec = ~/^\[(.+)\]/g, regexVal = ~/^([^#;].+)=(.+)/g, quote = ~/[\\'"](.+)[\\'"]/g, iln = 0;

@@ -13,6 +13,8 @@ state asks for has to be loaded before that state runs.
 """
 import sys
 
+from urllib.parse import unquote
+
 from fix_web_manifest import Reader
 
 PREFIX = '{\\"name\\":null,\\"assets\\":\\"'
@@ -39,7 +41,6 @@ DEFERRED_PREFIXES = (
     'assets/images/editors/',
     'assets/images/dialogue/',
     'assets/songs/',
-    'assets/music/',
     'assets/videos/',
 )
 
@@ -47,7 +48,7 @@ DEFERRED_PREFIXES = (
 def should_defer(asset_id, asset_type):
     if not asset_id:
         return asset_type in ('MUSIC', 'SOUND')
-    return asset_id.startswith(DEFERRED_PREFIXES)
+    return unquote(asset_id).startswith(DEFERRED_PREFIXES)
 
 
 def trim(serialized):
