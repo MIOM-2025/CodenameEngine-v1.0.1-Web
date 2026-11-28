@@ -125,19 +125,40 @@ class AssetsLibraryList extends AssetLibrary {
 		var out:Array<String> = [];
 		if (l == null || folder == null) return out;
 
-		var prefix = folder;
-		if (prefix.length > 0 && prefix.charAt(prefix.length - 1) != '/')
-			prefix += '/';
+		// ids in the table are the paths inside the library, which do not carry the
+		// "assets/" prefix the caller uses, so both spellings are tried
+		var prefixes:Array<String> = [];
+		var bare = folder;
+		if (bare.substr(0, 7) == "assets/") bare = bare.substr(7);
+		prefixes.push(bare);
+		if (bare == folder) prefixes.push("assets/" + folder);
+
+		for (i in 0...prefixes.length)
+		{
+			var prefix = prefixes[i];
+			if (prefix.length > 0 && prefix.charAt(prefix.length - 1) != '/')
+				prefix += '/';
+			prefixes[i] = prefix;
+		}
 
 		var ids:Null<Array<String>> = cast l.list(null);
 		if (ids == null) return out;
 
 		for (id in ids)
 		{
-			if (id == null || id.length <= prefix.length || id.substr(0, prefix.length) != prefix)
-				continue;
+			if (id == null) continue;
 
-			var rest = id.substr(prefix.length);
+			var rest:Null<String> = null;
+			for (prefix in prefixes)
+			{
+				if (id.length > prefix.length && id.substr(0, prefix.length) == prefix)
+				{
+					rest = id.substr(prefix.length);
+					break;
+				}
+			}
+			if (rest == null) continue;
+
 			var slash = rest.indexOf('/');
 
 			if (files)

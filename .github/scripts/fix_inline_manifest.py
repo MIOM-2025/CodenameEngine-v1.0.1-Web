@@ -6,10 +6,10 @@ embedded in CodenameEngine.js. Preloading every entry means downloading and
 decoding ~183 MB before the title screen, and the ogg tracks alone expand to
 about a gigabyte of PCM.
 
-Every entry is flipped. Loading the library then costs nothing, and the engine
-fetches the folders the next state needs right before switching, behind a loading
-bar. lime resolves images synchronously, so that pre-switch moment is the only
-place a browser can wait.
+The heavy folders are flipped; menus, fonts, data and effects stay preloaded, so
+the title screen renders immediately. Character and stage art and the song tracks
+are fetched right before the play state, behind a loading bar, because lime
+resolves images synchronously and a browser can only wait between states.
 """
 import sys
 
@@ -89,7 +89,7 @@ def trim(serialized):
             j = vend
         if preload_pos >= 0:
             seen += 1
-            if s[preload_pos] == 't':
+            if s[preload_pos] == 't' and should_defer(eid, etype):
                 edits.append(preload_pos)
                 changed += 1
         i = j + 1
