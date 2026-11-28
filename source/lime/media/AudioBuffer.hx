@@ -239,9 +239,9 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 
 		#if force_html5_audio
-		audioBuffer.__srcHowl = new Howl({src: [path], html5: true, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: [path], html5: true, preload: cast 'metadata'});
 		#else
-		audioBuffer.__srcHowl = new Howl({src: [path], html5: howlHtml5 || __cneIsMusicPath(path), preload: false});
+		audioBuffer.__srcHowl = new Howl({src: [path], html5: howlHtml5 || __cneIsMusicPath(path), preload: cast 'metadata'});
 		#end
 
 		return audioBuffer;
@@ -298,10 +298,10 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 
 		#if force_html5_audio
-		audioBuffer.__srcHowl = new Howl({src: paths, html5: true, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: paths, html5: true, preload: cast 'metadata'});
 		#else
 		var __stream = howlHtml5 || (paths.length > 0 && __cneIsMusicPath(paths[0]));
-		audioBuffer.__srcHowl = new Howl({src: paths, html5: __stream, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: paths, html5: __stream, preload: cast 'metadata'});
 		#end
 
 		return audioBuffer;
