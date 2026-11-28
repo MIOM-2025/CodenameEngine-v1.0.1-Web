@@ -83,18 +83,9 @@ class AssetsLibraryList extends AssetLibrary {
 				for(e in lib.getFiles(folder))
 					content.pushOnce(e);
 			}
-			#else
-			// A plain lime library exposes its entries through the paths map, which is
-			// all a folder listing needs. Without this every query returns nothing.
-			var entries:Dynamic = Reflect.field(l, "paths");
-			if (entries != null) {
-				var prefix:String = folder.endsWith("/") ? folder : folder + "/";
-				for (id in Reflect.fields(entries)) {
-					if (!id.startsWith(prefix)) continue;
-					var rel:String = id.substr(prefix.length);
-					if (rel.length > 0 && rel.indexOf("/") < 0) content.pushOnce(rel);
-				}
-			}
+			#elseif web
+			for (e in __cneList(l, folder, true))
+				content.pushOnce(e);
 			#end
 		}
 		return content;
@@ -114,21 +105,53 @@ class AssetsLibraryList extends AssetLibrary {
 				for(e in lib.getFolders(folder))
 					content.pushOnce(e);
 			}
-			#else
-			var entries:Dynamic = Reflect.field(l, "paths");
-			if (entries != null) {
-				var prefix:String = folder.endsWith("/") ? folder : folder + "/";
-				for (id in Reflect.fields(entries)) {
-					if (!id.startsWith(prefix)) continue;
-					var rel:String = id.substr(prefix.length);
-					var slash:Int = rel.indexOf("/");
-					if (slash > 0) content.pushOnce(rel.substr(0, slash));
-				}
-			}
+			#elseif web
+			for (e in __cneList(l, folder, false))
+				content.pushOnce(e);
 			#end
 		}
 		return content;
 	}
+
+	#if web
+	/**
+		Browsers cannot list a directory, which is how folder contents are normally
+		discovered. The asset library already carries a table of every id it knows
+		about, so the directory structure is derived from that table instead of
+		from the filesystem.
+	**/
+	@:noCompletion private function __cneList(l:Dynamic, folder:String, files:Bool):Array<String>
+	{
+		var out:Array<String> = [];
+		if (l == null || folder == null) return out;
+
+		var prefix = folder;
+		if (prefix.length > 0 && prefix.charAt(prefix.length - 1) != '/')
+			prefix += '/';
+
+		var ids:Null<Array<String>> = cast l.list(null);
+		if (ids == null) return out;
+
+		for (id in ids)
+		{
+			if (id == null || id.length <= prefix.length || id.substr(0, prefix.length) != prefix)
+				continue;
+
+			var rest = id.substr(prefix.length);
+			var slash = rest.indexOf('/');
+
+			if (files)
+			{
+				if (slash < 0) out.pushOnce(rest);
+			}
+			else if (slash >= 0)
+			{
+				out.pushOnce(rest.substr(0, slash));
+			}
+		}
+		return out;
+	}
+	#end
 
 	public function getSpecificAsset(id:String, type:String, source:AssetSource = BOTH):Dynamic {
 		try {

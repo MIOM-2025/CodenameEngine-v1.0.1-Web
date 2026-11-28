@@ -193,13 +193,7 @@ final class TranslationUtil
 		langConfigs = getDefaultLangConfigs();
 		var mainPath:String = translationsMain("");
 		var langName:String = null;
-		#if web
-		// A browser cannot list a directory, which is how the language list is
-		// normally built, so probe the folders that ship with the game instead.
-		for (lang in ["en", "es", "it", "pl", "pt"]) {
-		#else
 		for (lang in Paths.assetsTree.getFolders("assets/" + mainPath)) {
-		#end
 			if (!isAllowed(lang)) continue;
 
 			var path:String = Path.join([mainPath, lang, "config.ini"]);
@@ -211,16 +205,12 @@ final class TranslationUtil
 					for (key => value in v)
 						config[key] = value;
 			} else { // if there was no config.ini, use the file name as the language name
-				#if web
-				config["name"] = lang.toUpperCase();
-				#else
 				for(file in Paths.getFolderContent(mainPath + lang).sortAlphabetically()) {
 					if(Path.extension(file) == "xml") {
 						config["name"] = Path.withoutExtension(file);
 						break;
 					}
 				}
-				#end
 			}
 			langName = config["name"];
 			nameMap.set(lang, langName);
@@ -264,8 +254,19 @@ final class TranslationUtil
 
 		// todo make it load the default languages in a second string map
 
+		var files:Array<String> = [];
 		#if MOD_SUPPORT
-		for(mod in ModsFolder.getLoadedModsLibs(true)) for(file in mod.getFiles("assets/" + mainPath).sortAlphabetically().map((v)->'$mainPath/$v')) {
+		for(mod in ModsFolder.getLoadedModsLibs(true))
+			for(f in mod.getFiles("assets/" + mainPath))
+				files.push('$mainPath/$f');
+		#else
+		// the browser has no filesystem, so the asset table stands in for one
+		for(f in Paths.assetsTree.getFiles("assets/" + mainPath))
+			files.push('$mainPath/$f');
+		#end
+		files.sort(Reflect.compare);
+
+		for(file in files) {
 			if(Path.extension(file).toLowerCase() != "xml") continue;
 
 			// Parse the XML
@@ -288,25 +289,6 @@ final class TranslationUtil
 
 			parseXml(langNode, prefix);
 		}
-		#else
-		// Mods cannot exist in a browser, so the loop above is compiled out. Read the
-		// language files that ship with the game by name instead of asking the asset
-		// tree to enumerate them.
-		for(name in ["Main.xml", "Options.xml", "Editors.xml"]) {
-			var full:String = 'assets/$mainPath/$name';
-			if (!Assets.exists(full)) continue;
-
-			var xml:Access = null;
-			try xml = new Access(Xml.parse(Assets.getText(full)))
-			catch(e) Logs.error('Error while parsing $name: ${Std.string(e)}', "Language");
-
-			if (xml == null) continue;
-			if (!xml.hasNode.language) continue;
-
-			var langNode = xml.node.language;
-			parseXml(langNode, langNode.getAtt("prefix").getDefault(""));
-		}
-		#end
 
 		for(pair in translations) {
 			var node = pair.node;
