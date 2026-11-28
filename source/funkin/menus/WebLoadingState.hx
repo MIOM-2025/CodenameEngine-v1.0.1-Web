@@ -45,7 +45,7 @@ class WebLoadingState extends FlxState
 		add(track);
 
 		bar = new FlxSprite().makeGraphic(1, 1, 0xFF3CE03C);
-		bar.setGraphicSize(track.width, 14);
+		bar.setGraphicSize(Std.int(track.width), 14);
 		bar.updateHitbox();
 		bar.x = track.x;
 		bar.y = track.y;
