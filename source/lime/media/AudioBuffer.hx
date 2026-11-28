@@ -128,7 +128,7 @@ class AudioBuffer
 		}
 
 		var audioBuffer = new AudioBuffer();
-		audioBuffer.src = new Howl({src: [base64String], preload: false});
+		audioBuffer.src = new Howl({src: [base64String], preload: true});
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
 		#if !cs
@@ -174,7 +174,7 @@ class AudioBuffer
 
 		#if (js && html5 && lime_howlerjs)
 		var audioBuffer = new AudioBuffer();
-		audioBuffer.src = new Howl({src: ["data:" + __getCodec(bytes) + ";base64," + Base64.encode(bytes)], preload: false});
+		audioBuffer.src = new Howl({src: ["data:" + __getCodec(bytes) + ";base64," + Base64.encode(bytes)], preload: true});
 
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
