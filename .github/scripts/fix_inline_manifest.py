@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""Trim the preload flag in the manifest lime inlines into the web build.
+"""Make audio lazy in the manifest lime inlines into the web build.
 
 manifest/default.json is written but never read; the browser parses the copy
-embedded in CodenameEngine.js. Preloading all 963 entries means downloading and
-decoding ~183 MB before the title screen, which costs gigabytes of memory, so
-large entries are flipped to lazy loading. Small ones stay preloaded, because
-the engine expects fonts, UI pieces and its own sound effects to be present the
-moment a library is loaded.
+embedded in CodenameEngine.js. Preloading every entry means downloading and
+decoding ~183 MB before the title screen, and the ogg tracks alone expand to
+about a gigabyte of PCM.
+
+Only MUSIC and SOUND entries are flipped. Images and fonts stay preloaded,
+because lime resolves them synchronously: a lazily loaded image would come back
+empty the first time the engine asks for it.
 """
 import sys
 
 from fix_web_manifest import Reader
 
 PREFIX = '{\\"name\\":null,\\"assets\\":\\"'
-SIZE_LIMIT = 200000
+LAZY_TYPES = ('MUSIC', 'SOUND')
 
 
 def read_int(s, i):
@@ -26,7 +28,7 @@ def read_int(s, i):
     return int(s[j:k]), k
 
 
-def trim(serialized, limit=SIZE_LIMIT):
+def trim(serialized):
     r = Reader(serialized)
     s = serialized
     if not s or s[0] != 'a':
@@ -40,19 +42,25 @@ def trim(serialized, limit=SIZE_LIMIT):
             i = r.parse(i)
             continue
         j = i + 1
-        size = 0
+        etype = ''
         preload_pos = -1
         while j < len(s) and s[j] != 'g':
             key, vstart = r.key_at(j)
             vend = r.parse(vstart)
-            if key == 'size' and s[vstart] == 'i':
-                size, _ = read_int(s, vstart)
+            if key == 'type':
+                if s[vstart] in 'yY':
+                    k = s.index(':', vstart)
+                    etype = s[k + 1:vend]
+                elif s[vstart] in 'Rr':
+                    idx = int(s[vstart + 1:vend])
+                    if idx < len(r.cache):
+                        etype = r.cache[idx]
             elif key == 'preload':
                 preload_pos = vstart
             j = vend
         if preload_pos >= 0:
             seen += 1
-            if s[preload_pos] == 't' and size > limit:
+            if s[preload_pos] == 't' and etype in LAZY_TYPES:
                 edits.append(preload_pos)
                 changed += 1
         i = j + 1
@@ -62,7 +70,7 @@ def trim(serialized, limit=SIZE_LIMIT):
     return ''.join(chars), seen, changed
 
 
-def patch_js(path, limit=SIZE_LIMIT, verbose=True):
+def patch_js(path, verbose=True):
     src = open(path, encoding='utf-8').read()
     out = []
     cursor = 0
@@ -81,7 +89,7 @@ def patch_js(path, limit=SIZE_LIMIT, verbose=True):
         body = src[start:end]
         out.append(src[cursor:start])
         if body and body[0] == 'a' and body[-1] == 'h':
-            fixed, seen, changed = trim(body, limit)
+            fixed, seen, changed = trim(body)
             seen_total += seen
             changed_total += changed
             count += 1
@@ -95,8 +103,8 @@ def patch_js(path, limit=SIZE_LIMIT, verbose=True):
     if result != src:
         open(path, 'w', encoding='utf-8').write(result)
     if verbose:
-        print('%s: %d manifests, %d flags, %d lazy (>%d bytes)'
-              % (path, count, seen_total, changed_total, limit))
+        print('%s: %d manifests, %d flags, %d audio entries lazy'
+              % (path, count, seen_total, changed_total))
     return seen_total, changed_total
 
 
