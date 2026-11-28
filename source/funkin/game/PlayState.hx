@@ -1205,8 +1205,8 @@ class PlayState extends MusicBeatState
 	@:dox(hide)
 	override public function onFocus():Void
 	{
-		if (!paused && FlxG.autoPause) {
-			for (strumLine in strumLines.members) strumLine.vocals.resume();
+		if (!paused && FlxG.autoPause && inst != null && vocals != null) {
+			for (strumLine in strumLines.members) if (strumLine.vocals != null) strumLine.vocals.resume();
 			inst.resume();
 			vocals.resume();
 		}
@@ -1218,8 +1218,10 @@ class PlayState extends MusicBeatState
 	@:dox(hide)
 	override public function onFocusLost():Void
 	{
-		if (!paused && FlxG.autoPause) {
-			for (strumLine in strumLines.members) strumLine.vocals.pause();
+		// the tracks may not have been created yet: on web they are fetched right
+		// before this state starts, and a missing one is null rather than silent
+		if (!paused && FlxG.autoPause && inst != null && vocals != null) {
+			for (strumLine in strumLines.members) if (strumLine.vocals != null) strumLine.vocals.pause();
 			inst.pause();
 			vocals.pause();
 		}
