@@ -132,8 +132,9 @@ jobs:
       - name: Add on-screen controls and bust the browser cache
         run: python3 .github/scripts/patch_index.py
 
-      # Audio entries stay preloaded: a howler sound that was never loaded has no
-      # instance yet, and the pitch path reads one as soon as playback starts.
+      - name: Clear web asset preload flags
+        run: |
+          python3 .github/scripts/fix_inline_manifest.py export/release/html5/bin/CodenameEngine.js
 
       - name: Show output
         if: always()

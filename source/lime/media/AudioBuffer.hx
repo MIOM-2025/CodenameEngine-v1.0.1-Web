@@ -128,7 +128,7 @@ class AudioBuffer
 		}
 
 		var audioBuffer = new AudioBuffer();
-		audioBuffer.src = new Howl({src: [base64String], preload: false});
+		audioBuffer.src = new Howl({src: [base64String], preload: true});
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
 		#if !cs
@@ -174,7 +174,7 @@ class AudioBuffer
 
 		#if (js && html5 && lime_howlerjs)
 		var audioBuffer = new AudioBuffer();
-		audioBuffer.src = new Howl({src: ["data:" + __getCodec(bytes) + ";base64," + Base64.encode(bytes)], preload: false});
+		audioBuffer.src = new Howl({src: ["data:" + __getCodec(bytes) + ";base64," + Base64.encode(bytes)], preload: true});
 
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
@@ -213,6 +213,21 @@ class AudioBuffer
 		@param path The file path to the audio data.
 		@return An `AudioBuffer` instance with the audio data loaded from the file.
 	**/
+
+	#if (js && html5)
+	/**
+		Music and songs are streamed through an audio element. Decoding the shipped
+		tracks into pcm costs about a gigabyte, which is what makes the page run out
+		of memory on a phone; effects stay decoded so overlapping effects work.
+	**/
+	@:noCompletion public static function __cneIsStreamed(path:String):Bool
+	{
+		if (path == null) return false;
+		var p:String = path.toLowerCase();
+		return p.indexOf("music/") >= 0 || p.indexOf("songs/") >= 0;
+	}
+	#end
+
 	public static function fromFile(path:String #if (js && html5 && lime_howlerjs), ?howlHtml5 = false #end):AudioBuffer
 	{
 		if (path == null) return null;
@@ -221,9 +236,9 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 
 		#if force_html5_audio
-		audioBuffer.__srcHowl = new Howl({src: [path], html5: true, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: [path], html5: true, preload: true});
 		#else
-		audioBuffer.__srcHowl = new Howl({src: [path], html5: howlHtml5, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: [path], html5: __cneIsStreamed(path), preload: true});
 		#end
 
 		return audioBuffer;
@@ -280,9 +295,9 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 
 		#if force_html5_audio
-		audioBuffer.__srcHowl = new Howl({src: paths, html5: true, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: paths, html5: true, preload: true});
 		#else
-		audioBuffer.__srcHowl = new Howl({src: paths, html5: howlHtml5, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: paths, html5: __cneIsStreamed(paths[0]), preload: true});
 		#end
 
 		return audioBuffer;
