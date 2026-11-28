@@ -29,6 +29,27 @@ def read_int(s, i):
     return int(s[j:k]), k
 
 
+
+# Folders whose contents stay on the server until something asks for them. They
+# hold the bulk of the bytes: character and stage art, and the song tracks.
+DEFERRED_PREFIXES = (
+    'assets/images/characters/',
+    'assets/images/stages/',
+    'assets/images/game/',
+    'assets/images/editors/',
+    'assets/images/dialogue/',
+    'assets/songs/',
+    'assets/music/',
+    'assets/videos/',
+)
+
+
+def should_defer(asset_id, asset_type):
+    if not asset_id:
+        return asset_type in ('MUSIC', 'SOUND')
+    return asset_id.startswith(DEFERRED_PREFIXES)
+
+
 def trim(serialized):
     r = Reader(serialized)
     s = serialized
@@ -44,24 +65,30 @@ def trim(serialized):
             continue
         j = i + 1
         etype = ''
+        eid = ''
         preload_pos = -1
         while j < len(s) and s[j] != 'g':
             key, vstart = r.key_at(j)
             vend = r.parse(vstart)
+            value = s[vstart:vend]
+            if value.startswith('y'):
+                k = s.index(':', vstart)
+                literal = s[k + 1:vend]
+            elif value.startswith('R'):
+                idx = int(value[1:])
+                literal = r.cache[idx] if idx < len(r.cache) else ''
+            else:
+                literal = ''
             if key == 'type':
-                if s[vstart] in 'yY':
-                    k = s.index(':', vstart)
-                    etype = s[k + 1:vend]
-                elif s[vstart] in 'Rr':
-                    idx = int(s[vstart + 1:vend])
-                    if idx < len(r.cache):
-                        etype = r.cache[idx]
+                etype = literal
+            elif key == 'id':
+                eid = literal
             elif key == 'preload':
                 preload_pos = vstart
             j = vend
         if preload_pos >= 0:
             seen += 1
-            if s[preload_pos] == 't':
+            if s[preload_pos] == 't' and should_defer(eid, etype):
                 edits.append(preload_pos)
                 changed += 1
         i = j + 1

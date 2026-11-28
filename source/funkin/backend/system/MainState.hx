@@ -141,77 +141,7 @@ class MainState extends FlxState {
 			}
 		}
 
-		#if web
-		// Nothing is preloaded in the manifest, so the engine loads what the menus
-		// need before the first state runs. lime resolves images synchronously,
-		// which is why this has to finish before the switch.
-		__cnePreloadCore(function() FlxG.switchState(cast Type.createInstance(startState, [])));
-		#else
 		FlxG.switchState(cast Type.createInstance(startState, []));
-		#end
 	}
 
-	#if web
-	static var CNE_CORE_FOLDERS:Array<String> = [
-		"assets/fonts/",
-		"assets/data/",
-		"assets/languages/",
-		"assets/shaders/",
-		"assets/images/menus/",
-		"assets/images/icons/",
-		"assets/images/credits/"
-	];
-
-	@:noCompletion private function __cnePreloadCore(done:Void->Void):Void
-	{
-		var lib:lime.utils.AssetLibrary = lime.utils.Assets.getLibrary("assets");
-		if (lib == null)
-		{
-			done();
-			return;
-		}
-
-		var pending:Int = 1;
-		var finished:Bool = false;
-
-		function tick():Void
-		{
-			pending--;
-			if (pending <= 0 && !finished)
-			{
-				finished = true;
-				done();
-			}
-		}
-
-		function wanted(id:String):Bool
-		{
-			if (id == null) return false;
-			for (folder in CNE_CORE_FOLDERS)
-				if (id.substr(0, folder.length) == folder) return true;
-			return false;
-		}
-
-		function track(fut:Dynamic):Void
-		{
-			if (fut == null) return;
-			pending++;
-			try
-			{
-				fut.onComplete(function(_) tick());
-				fut.onError(function(_) tick());
-			}
-			catch (e:Dynamic) tick();
-		}
-
-		for (id in lib.list(lime.utils.AssetType.IMAGE))
-			if (wanted(id)) track(lib.loadImage(id));
-		for (id in lib.list(lime.utils.AssetType.FONT))
-			if (wanted(id)) track(lib.loadFont(id));
-		for (id in lib.list(lime.utils.AssetType.TEXT))
-			if (wanted(id)) track(lib.loadText(id));
-
-		tick();
-	}
-	#end
 }
