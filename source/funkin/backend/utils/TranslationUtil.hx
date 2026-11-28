@@ -193,7 +193,13 @@ final class TranslationUtil
 		langConfigs = getDefaultLangConfigs();
 		var mainPath:String = translationsMain("");
 		var langName:String = null;
+		#if web
+		// A browser cannot list a directory, which is how the language list is
+		// normally built, so probe the folders that ship with the game instead.
+		for (lang in ["en", "es", "it", "pl", "pt"]) {
+		#else
 		for (lang in Paths.assetsTree.getFolders("assets/" + mainPath)) {
+		#end
 			if (!isAllowed(lang)) continue;
 
 			var path:String = Path.join([mainPath, lang, "config.ini"]);
@@ -205,12 +211,16 @@ final class TranslationUtil
 					for (key => value in v)
 						config[key] = value;
 			} else { // if there was no config.ini, use the file name as the language name
+				#if web
+				config["name"] = lang.toUpperCase();
+				#else
 				for(file in Paths.getFolderContent(mainPath + lang).sortAlphabetically()) {
 					if(Path.extension(file) == "xml") {
 						config["name"] = Path.withoutExtension(file);
 						break;
 					}
 				}
+				#end
 			}
 			langName = config["name"];
 			nameMap.set(lang, langName);
