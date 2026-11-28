@@ -107,7 +107,7 @@ final class MemoryUtil {
 	 * Gets the current memory usage of the app.
 	 * DISCLAIMER: This gets the memory usage that is taken up by Haxe, not the actual memory usage of the app.
 	 */
-	public static inline function currentMemUsage() {
+	public static function currentMemUsage() {
 		#if cpp
 		return Gc.memInfo64(Gc.MEM_INFO_USAGE);
 		#elseif hl
@@ -117,8 +117,13 @@ final class MemoryUtil {
 		#elseif js
 		// Browsers only expose the JS heap; GPU textures and decoded audio live
 		// outside it, so treat this as a trend indicator rather than the total.
-		var perf:Dynamic = js.Syntax.code("performance");
-		if (perf != null && perf.memory != null) return cast perf.memory.usedJSHeapSize;
+		// Wrapped because this runs every frame and must never throw.
+		try
+		{
+			var value:Dynamic = js.Syntax.code("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0");
+			if (value != null) return cast value;
+		}
+		catch (e:Dynamic) {}
 		return 0;
 		#else
 		return 0;
