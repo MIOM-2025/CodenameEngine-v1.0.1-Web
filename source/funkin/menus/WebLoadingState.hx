@@ -20,6 +20,7 @@ class WebLoadingState extends FlxState
 	var bar:FlxSprite;
 	var label:FlxText;
 	var total:Int = 1;
+	var found:Int = -1;
 	var loaded:Int = 0;
 	var started:Bool = false;
 
@@ -72,15 +73,23 @@ class WebLoadingState extends FlxState
 			WebLoader.preload(prefixes, function(l:Int, t:Int) {
 				loaded = l;
 				total = t <= 0 ? 1 : t;
+				found = t;
 			}, function() {
-				FlxG.switchState(next());
+				// a browser cannot wait inside a state, so a run that found nothing
+				// is held for a moment to make that visible instead of flickering past
+				if (found <= 0)
+				{
+					label.text = "nothing to load for: " + prefixes.join(", ");
+					haxe.Timer.delay(function() FlxG.switchState(next()), 1500);
+				}
+				else FlxG.switchState(next());
 			});
 		}
 
 		var p = loaded / total;
 		if (p > 1) p = 1;
 		bar.scale.x = p;
-		label.text = "Loading... " + Std.int(p * 100) + "%";
+		label.text = "Loading " + loaded + " / " + found + "   " + Std.int(p * 100) + "%";
 	}
 }
 #end

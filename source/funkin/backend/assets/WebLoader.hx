@@ -26,7 +26,19 @@ class WebLoader
 
 		if (lib == null)
 		{
-			done();
+			try
+			{
+				lib = openfl.utils.Assets.getLibrary("assets");
+			}
+			catch (e:Dynamic) {}
+		}
+
+		if (lib == null)
+		{
+			// nothing can be fetched without the library; report it as progress so the
+			// loading state shows the failure instead of flickering past
+			onProgress(0, 0);
+			haxe.Timer.delay(done, 800);
 			return;
 		}
 
