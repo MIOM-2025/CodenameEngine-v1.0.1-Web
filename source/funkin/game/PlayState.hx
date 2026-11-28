@@ -1068,22 +1068,6 @@ class PlayState extends MusicBeatState
 			if (FlxG.sound.music != inst) FlxG.sound.destroySound(inst);
 			FlxG.sound.destroySound(vocals);
 		}
-		#if web
-		// The decoded song sits in the lime audio cache keyed by its path, so
-		// without this every played song stays resident for the whole session.
-		if (SONG != null && SONG.meta != null) {
-			@:privateAccess {
-				for (key in [
-					Paths.inst(SONG.meta.name, difficulty, SONG.meta.instSuffix),
-					Paths.voices(SONG.meta.name, difficulty, SONG.meta.vocalsSuffix)
-				]) {
-					if (key == null) continue;
-					lime.utils.Assets.cache.audio.remove(key);
-				}
-			}
-		}
-		#end
-
 		scripts = FlxDestroyUtil.destroy(scripts);
 
 		super.destroy();
