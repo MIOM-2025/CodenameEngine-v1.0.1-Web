@@ -346,8 +346,19 @@ class FreeplayState extends MusicBeatState
 		Options.freeplayLastDifficulty = curDifficulties[curDifficulty];
 		Options.freeplayLastVariation = curSong.variant;
 
+		#if web
+		// the browser has to fetch the character and stage art before the play state
+		// can ask for it, so that happens here, where waiting is allowed
+		funkin.backend.assets.WebLoader.preload(
+			["images/characters/", "images/stages/", "images/game/", "songs/" + event.song + "/"],
+			function() {
+				PlayState.loadSong(event.song, event.difficulty, event.variant, event.opponentMode, event.coopMode);
+				FlxG.switchState(new PlayState());
+			});
+		#else
 		PlayState.loadSong(event.song, event.difficulty, event.variant, event.opponentMode, event.coopMode);
 		FlxG.switchState(new PlayState());
+		#end
 	}
 
 	public function convertChart() {
