@@ -348,13 +348,13 @@ class FreeplayState extends MusicBeatState
 
 		#if web
 		// the browser has to fetch the character and stage art before the play state
-		// can ask for it, so that happens here, where waiting is allowed
-		funkin.backend.assets.WebLoader.preload(
+		// can ask for it, so a loading state waits for those and shows a bar
+		FlxG.switchState(new funkin.menus.WebLoadingState(
 			["images/characters/", "images/stages/", "images/game/", "songs/" + event.song + "/"],
 			function() {
 				PlayState.loadSong(event.song, event.difficulty, event.variant, event.opponentMode, event.coopMode);
-				FlxG.switchState(new PlayState());
-			});
+				return new PlayState();
+			}));
 		#else
 		PlayState.loadSong(event.song, event.difficulty, event.variant, event.opponentMode, event.coopMode);
 		FlxG.switchState(new PlayState());

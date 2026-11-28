@@ -9,13 +9,13 @@ import lime.utils.AssetType;
 	later, while the engine asks for an asset at the moment it needs it.
 
 	The one place where waiting is allowed is before a state switch. This walks the
-	asset table and loads the folders the next state is going to use, so by the time
-	that state runs everything it asks for is already in memory.
+	asset table and loads the folders the next state is going to use, reporting
+	progress so the caller can show a bar.
 **/
 @:dox(hide)
 class WebLoader
 {
-	public static function preload(prefixes:Array<String>, done:Void->Void):Void
+	public static function preload(prefixes:Array<String>, onProgress:Int->Int->Void, done:Void->Void):Void
 	{
 		var lib:AssetLibrary = null;
 		try
@@ -30,19 +30,6 @@ class WebLoader
 			return;
 		}
 
-		var pending:Int = 1;
-		var finished:Bool = false;
-
-		function tick():Void
-		{
-			pending--;
-			if (pending <= 0 && !finished)
-			{
-				finished = true;
-				done();
-			}
-		}
-
 		function strip(id:String):String
 			return id.substr(0, 7) == "assets/" ? id.substr(7) : id;
 
@@ -55,10 +42,42 @@ class WebLoader
 			return false;
 		}
 
+		var items:Array<{id:String, type:String}> = [];
+		for (type in [AssetType.IMAGE, AssetType.FONT, AssetType.TEXT, AssetType.BINARY, AssetType.MUSIC, AssetType.SOUND])
+			for (id in lib.list(type))
+				if (wanted(id)) items.push({id: id, type: type});
+
+		var ids = items;
+
+		var total:Int = ids.length;
+		if (total == 0)
+		{
+			onProgress(1, 1);
+			done();
+			return;
+		}
+
+		var loaded:Int = 0;
+		var finished:Bool = false;
+
+		function tick():Void
+		{
+			loaded++;
+			onProgress(loaded, total);
+			if (loaded >= total && !finished)
+			{
+				finished = true;
+				done();
+			}
+		}
+
 		function track(fut:Dynamic):Void
 		{
-			if (fut == null) return;
-			pending++;
+			if (fut == null)
+			{
+				tick();
+				return;
+			}
 			try
 			{
 				fut.onComplete(function(_) tick());
@@ -67,20 +86,19 @@ class WebLoader
 			catch (e:Dynamic) tick();
 		}
 
-		for (id in lib.list(AssetType.IMAGE))
-			if (wanted(id)) track(lib.loadImage(id));
-		for (id in lib.list(AssetType.FONT))
-			if (wanted(id)) track(lib.loadFont(id));
-		for (id in lib.list(AssetType.TEXT))
-			if (wanted(id)) track(lib.loadText(id));
-		for (id in lib.list(AssetType.BINARY))
-			if (wanted(id)) track(lib.loadBytes(id));
-		for (id in lib.list(AssetType.MUSIC))
-			if (wanted(id)) track(lib.loadAudioBuffer(id));
-		for (id in lib.list(AssetType.SOUND))
-			if (wanted(id)) track(lib.loadAudioBuffer(id));
+		onProgress(0, total);
 
-		tick();
+		for (item in ids)
+		{
+			switch (item.type)
+			{
+				case AssetType.IMAGE: track(lib.loadImage(item.id));
+				case AssetType.FONT: track(lib.loadFont(item.id));
+				case AssetType.TEXT: track(lib.loadText(item.id));
+				case AssetType.BINARY: track(lib.loadBytes(item.id));
+				default: track(lib.loadAudioBuffer(item.id));
+			}
+		}
 	}
 }
 #end
