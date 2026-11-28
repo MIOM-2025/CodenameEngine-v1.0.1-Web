@@ -54,7 +54,11 @@ class WebLoadingState extends FlxState
 		add(bar);
 
 		label = new FlxText(0, track.y - 34, Std.int(FlxG.width), "Loading...");
-		label.setFormat(Paths.font("vcr.ttf"), 20, 0xFFFFFFFF, "center");
+		var face = Paths.font("vcr.ttf");
+		if (face != null)
+			label.setFormat(face, 20, 0xFFFFFFFF, "center");
+		else
+			label.setFormat(null, 20, 0xFFFFFFFF, "center");
 		add(label);
 	}
 

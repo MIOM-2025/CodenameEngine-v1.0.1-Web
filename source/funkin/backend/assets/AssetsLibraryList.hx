@@ -125,13 +125,16 @@ class AssetsLibraryList extends AssetLibrary {
 		var out:Array<String> = [];
 		if (l == null || folder == null) return out;
 
-		// ids in the table are the paths inside the library, which do not carry the
-		// "assets/" prefix the caller uses, so both spellings are tried
+		// ids in the table are the paths inside the library and may or may not carry
+		// the "assets/" prefix the caller uses, so both spellings are tried
 		var prefixes:Array<String> = [];
 		var bare = folder;
 		if (bare.substr(0, 7) == "assets/") bare = bare.substr(7);
 		prefixes.push(bare);
-		if (bare == folder) prefixes.push("assets/" + folder);
+		if (bare != folder)
+			prefixes.push(folder);
+		else
+			prefixes.push("assets/" + folder);
 
 		for (i in 0...prefixes.length)
 		{
@@ -141,7 +144,17 @@ class AssetsLibraryList extends AssetLibrary {
 			prefixes[i] = prefix;
 		}
 
-		var ids:Null<Array<String>> = cast l.list(null);
+		// the debug info panel walks the tree while the game boots; an exception
+		// there would take the whole panel down with it
+		var ids:Null<Array<String>> = null;
+		try
+		{
+			ids = cast l.list(null);
+		}
+		catch (e:Dynamic)
+		{
+			return out;
+		}
 		if (ids == null) return out;
 
 		for (id in ids)
