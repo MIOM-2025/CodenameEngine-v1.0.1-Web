@@ -6,9 +6,10 @@ embedded in CodenameEngine.js. Preloading every entry means downloading and
 decoding ~183 MB before the title screen, and the ogg tracks alone expand to
 about a gigabyte of PCM.
 
-Only MUSIC and SOUND entries are flipped. Images and fonts stay preloaded,
-because lime resolves them synchronously: a lazily loaded image would come back
-empty the first time the engine asks for it.
+Every entry is flipped, so loading the library costs almost nothing. The engine
+then preloads the folders it actually needs, which is the only way to keep the
+page inside a phone's memory: lime resolves images synchronously, so whatever a
+state asks for has to be loaded before that state runs.
 """
 import sys
 
@@ -60,7 +61,7 @@ def trim(serialized):
             j = vend
         if preload_pos >= 0:
             seen += 1
-            if s[preload_pos] == 't' and etype in LAZY_TYPES:
+            if s[preload_pos] == 't':
                 edits.append(preload_pos)
                 changed += 1
         i = j + 1
