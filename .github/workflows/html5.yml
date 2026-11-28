@@ -135,6 +135,7 @@ jobs:
       - name: Clear web asset preload flags
         run: |
           python3 .github/scripts/fix_web_manifest.py export/release/html5/bin/manifest/default.json
+          python3 .github/scripts/fix_inline_manifest.py export/release/html5/bin/CodenameEngine.js
 
       - name: Show output
         if: always()
