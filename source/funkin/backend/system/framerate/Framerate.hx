@@ -20,7 +20,7 @@ class Framerate extends Sprite {
 	public static var codenameBuildField:CodenameBuildField;
 	#end
 
-	public static var fontName:String = #if windows '${Sys.getEnv("windir")}\\Fonts\\consola.ttf' #else "_typewriter" #end;
+	public static var fontName:String = #if windows '${Sys.getEnv("windir")}\\Fonts\\consola.ttf' #elseif web "monospace" #else "_typewriter" #end;
 
 	/**
 	 * 0: FPS INVISIBLE
@@ -46,6 +46,17 @@ class Framerate extends Sprite {
 		super();
 		if (instance != null) throw "Cannot create another instance";
 		instance = this;
+		#if web
+		// the browser has no such thing as "_typewriter"; use the font the engine
+		// ships and registers, falling back to a css family it does know
+		try
+		{
+			var shipped = funkin.backend.assets.Paths.getFontName("assets/fonts/DTM-Mono.ttf");
+			if (shipped != null) fontName = shipped;
+		}
+		catch (e:Dynamic) {}
+		#end
+
 		textFormat = new TextFormat(fontName, 12, -1);
 
 		isLoaded = true;
